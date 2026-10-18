@@ -310,6 +310,9 @@ function openProdForm(id) {
   $('#pfVisible').checked = p ? p.visible !== false : true;
   $('#pfDescBn').value = p ? (p.descBn || '') : '';
   $('#pfDescEn').value = p ? (p.descEn || '') : '';
+  $('#pfFabKamiz').value = p && p.fabric ? (p.fabric.kamiz || '') : '';
+  $('#pfFabSalwar').value = p && p.fabric ? (p.fabric.salwar || '') : '';
+  $('#pfFabOrna').value = p && p.fabric ? (p.fabric.orna || '') : '';
   $('#prodErr').textContent = '';
   $('#imgRows').innerHTML = '';
   const imgs = p ? ((p.images && p.images.length ? p.images : [p.img]).filter(Boolean)) : [''];
@@ -487,6 +490,7 @@ async function saveProdForm() {
     price, oldPrice: oldPrice > price ? oldPrice : 0,
     img: images[0], images,
     descBn: $('#pfDescBn').value.trim(), descEn: $('#pfDescEn').value.trim(),
+    fabric: { kamiz: $('#pfFabKamiz').value.trim(), salwar: $('#pfFabSalwar').value.trim(), orna: $('#pfFabOrna').value.trim() },
     sizes, sizeStock,
     stock, tags: formTags, tag: formTags[0] || '',
     visible: $('#pfVisible').checked,

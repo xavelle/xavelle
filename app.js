@@ -74,6 +74,7 @@ const I18N = {
   wishlist: { bn: 'উইশলিস্ট', en: 'Wishlist' },
   account: { bn: 'অ্যাকাউন্ট', en: 'Account' },
   filterSize: { bn: 'সাইজ', en: 'Size' },
+  fabricMeasure: { bn: 'কাপড়ের মাপ', en: 'Fabric measurement' },
   cart: { bn: 'কার্ট', en: 'Cart' },
   signin: { bn: 'সাইন ইন', en: 'Sign In' },
   searchPh: { bn: 'প্রোডাক্ট খুঁজুন...', en: 'Search products...' },
@@ -132,6 +133,7 @@ const I18N = {
   sizeGuideNote: { bn: 'বুকের মাপ: বগলের নিচ দিয়ে চারপাশে মাপুন। লম্বা: কাঁধ থেকে নিচ পর্যন্ত।', en: 'Chest: measure around under the arms. Length: shoulder to bottom.' },
   freeShip: { bn: 'ফ্রি ডেলিভারি', en: 'Free Delivery' },
   waOrder: { bn: 'WhatsApp-এ অর্ডার', en: 'Order on WhatsApp' },
+  msgChat: { bn: 'মেসেঞ্জারে জিজ্ঞেস করুন', en: 'Ask on Messenger' },
   maxPrice: { bn: 'সর্বোচ্চ দাম', en: 'Max price' },
   trust1: { bn: 'অরিজিনাল পণ্য', en: 'Genuine Products' },
   trust2: { bn: 'ক্যাশ অন ডেলিভারি', en: 'Cash on Delivery' },
@@ -494,14 +496,24 @@ function renderFloatBtns() {
     fb2.id = 'floatBtns';
     document.body.appendChild(fb2);
   }
-  const phone = (SETTINGS.phone || '').replace(/\s/g, '');
+  const wa = (SETTINGS.whatsapp || '').replace(/\s/g, '');
   let msg = (SETTINGS.messenger || '').trim();
   if (msg && !/^https?:\/\//i.test(msg)) msg = 'https://m.me/' + msg;
+  if (!wa && !msg) { fb2.style.display = 'none'; fb2.innerHTML = ''; return; }
+  fb2.style.display = '';
   fb2.innerHTML = `
-    ${phone ? `<a class="float-btn fb-call" href="tel:${esc(phone)}" aria-label="call">📞</a>` : ''}
-    ${msg ? `<a class="float-btn fb-msg" href="${esc(msg)}" target="_blank" rel="noopener" aria-label="messenger">
-      <svg viewBox="0 0 24 24" width="26" height="26" fill="#fff"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.92 1.56 5.54 4 7.32V22l3.66-2.01c.97.27 2 .42 3.08.42 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm5.2 12.5-2.7 4.29c-.43.68-1.5.6-1.83-.15l-2.03-4.6c-.16-.37-.72-.37-.88 0l-1.66 4.07c-.3.73-1.33.62-1.7-.18l-2.5-5.4c-.28-.6.2-1.28.85-1.2l8.9 1.1c.7.09 1 .9.55 1.07z" opacity=".95"/></svg></a>` : ''}`;
-  fb2.style.display = fb2.innerHTML.trim() ? '' : 'none';
+    <div class="fab-menu" id="fabMenu" hidden>
+      ${wa ? `<a class="float-btn fab-wa" href="https://wa.me/${esc(wa)}" target="_blank" rel="noopener" aria-label="WhatsApp">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.6-6.1c-.3-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.3-.6.8-.8 1-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4 0-.5.1-.7l.4-.5c.1-.2.1-.3 0-.5l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.2-.7.7-.9 2.1.3 4.4 2.3 6.4 2.7 2.7 4.5 2.9 5.4 2.7.7-.1 1.5-.7 1.7-1.3.2-.6.2-1.1.1-1.3 0-.1-.2-.2-.5-.3z"/></svg></a>` : ''}
+      ${msg ? `<a class="float-btn fab-msg" href="${esc(msg)}" target="_blank" rel="noopener" aria-label="Messenger">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="#fff"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.92 1.56 5.54 4 7.32V22l3.66-2.01c.97.27 2 .42 3.08.42 5.52 0 10-4.14 10-9.25S17.52 2 12 2z"/></svg></a>` : ''}
+    </div>
+    <button class="float-btn fab-main" id="fabMain" aria-label="contact">💬</button>`;
+  const main = $('#fabMain'), menu = $('#fabMenu');
+  main.onclick = (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; fb2.classList.toggle('open', !menu.hidden); };
+  document.addEventListener('click', function h(e) {
+    if (!menu.hidden && !fb2.contains(e.target)) { menu.hidden = true; fb2.classList.remove('open'); }
+  });
 }
 
 /* মোবাইল bottom nav — Infinity-স্টাইল: Home / Shop / Cart / Wishlist / Account */
@@ -793,29 +805,16 @@ function viewShop(params) {
   const heading = main ? (sub ? `${mainLabel} › ${subLabel}` : mainLabel) : (q ? t('searchRes', { q }) : t('shop'));
   const mains = visibleMains();
   const subs = main ? mainOf(main).subs : [];
-  const allSizes = [...new Set(PRODUCTS.flatMap((p) => p.sizes || []))];
-  const sizeBase = `#shop?${main ? 'main=' + main + '&' : ''}${sub ? 'sub=' + sub + '&' : ''}${q ? 'q=' + encodeURIComponent(q) + '&' : ''}${maxPrice ? 'max=' + maxPrice + '&' : ''}sort=${sort}`;
-  const allPrices = PRODUCTS.filter((x) => x.visible !== false && catVisible(x)).map((x) => x.price);
-  const pMin = Math.min(...allPrices), pMax = Math.max(...allPrices);
-  const sliderVal = maxPrice > 0 ? Math.min(maxPrice, pMax) : pMax;
   return `<section class="section"><div class="crumb"><a href="#home">${t('home')}</a> › <a href="#shop">${t('shop')}</a>${main ? ` › <a href="#shop?main=${main}">${esc(mainLabel)}</a>` : ''}${sub ? ` › <span>${esc(subLabel)}</span>` : ''}</div>
   <h2 style="color:var(--navy)">${esc(heading)}</h2>
   <div class="filters" style="margin-top:14px">
-    <select id="fSort"><option value="popular" ${sort === 'popular' ? 'selected' : ''}>${t('sortPop')}</option><option value="low" ${sort === 'low' ? 'selected' : ''}>${t('sortLow')}</option><option value="high" ${sort === 'high' ? 'selected' : ''}>${t('sortHigh')}</option><option value="new" ${sort === 'new' ? 'selected' : ''}>${t('sortNew')}</option></select>
-    <select id="fMax"><option value="0">${t('priceAll')}</option><option value="1000" ${maxPrice === 1000 ? 'selected' : ''}>${t('priceUnder', { n: 1000 })}</option><option value="2000" ${maxPrice === 2000 ? 'selected' : ''}>${t('priceUnder', { n: 2000 })}</option><option value="3000" ${maxPrice === 3000 ? 'selected' : ''}>${t('priceUnder', { n: 3000 })}</option></select>
-    <div class="price-slider"><label>${t('maxPrice')}: <b id="fPriceVal">${fmt(sliderVal)}</b></label><input type="range" id="fPrice" min="${pMin}" max="${pMax}" step="50" value="${sliderVal}"></div>
-    <input id="fQ" placeholder="${t('shopSearchPh')}" value="${esc(q)}">
+    <input id="fQ" placeholder="${t('shopSearchPh')}" value="${esc(q)}" style="flex:1">
   </div>
   <div class="filter-label">${t('filterCat')}</div>
   <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px">
     <button class="chip ${!main ? 'on' : ''}" onclick="location.hash='#shop'">${t('all')}</button>
     ${mains.map((m) => `<button class="chip ${main === m.slug ? 'on' : ''}" onclick="location.hash='#shop?main=${m.slug}'">${esc(LANG === 'bn' ? m.bn : m.en)}</button>`).join('')}
   </div>
-  ${allSizes.length ? `<div class="filter-label">${t('filterSize')}</div>
-  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px">
-    <button class="chip ${!sizeF ? 'on' : ''}" onclick="location.hash='${sizeBase}'">${t('all')}</button>
-    ${allSizes.map((s) => `<button class="chip ${sizeF === s ? 'on' : ''}" onclick="location.hash='${sizeBase}&size=${encodeURIComponent(s)}'">${esc(s)}</button>`).join('')}
-  </div>` : ''}
   ${main ? `<div class="filter-label">${esc(mainLabel)} — ${t('subcat')}</div>
   <div class="sub-chips">
     <button class="chip sub-chip ${!sub ? 'on' : ''}" onclick="location.hash='#shop?main=${main}'">${t('all')}</button>
@@ -838,6 +837,8 @@ function viewProduct(id) {
   const seedRv = seedReviews[p.id] || [];
   const imgs = (Array.isArray(p.images) && p.images.length ? p.images : [p.img]).filter(Boolean);
   const waText = encodeURIComponent(`আসসালামু আলাইকুম! আমি এই প্রোডাক্টটি অর্ডার করতে চাই:\n${name} (SKU: ${p.sku || '-'}) — ${fmt(p.price)}\n${location.href}`);
+  let msgUrl = (SETTINGS.messenger || '').trim();
+  if (msgUrl && !/^https?:\/\//i.test(msgUrl)) msgUrl = 'https://m.me/' + msgUrl;
   return `<section class="section"><div class="crumb"><a href="#home">${t('home')}</a> › <a href="#shop">${t('shop')}</a> › <a href="#shop?main=${p.main}">${esc(LANG === 'bn' ? mainOf(p.main).bn : mainOf(p.main).en)}</a> › <a href="#shop?main=${p.main}&sub=${p.sub}">${esc(LANG === 'bn' ? subOf(p.main, p.sub).bn : subOf(p.main, p.sub).en)}</a> › <span>${esc(name)}</span></div><div class="pd">
     <div class="pd-gallery"><img class="main" id="pdMain" src="${esc(imgs[0])}" alt="${esc(name)}" onerror="this.src='${FALLBACK_IMG}'">
     ${imgs.length > 1 ? `<div class="pd-thumbs">${imgs.map((im, i) => `<button class="pd-thumb${i === 0 ? ' on' : ''}" data-src="${esc(im)}" aria-label="${t('imgAlt', { n: i + 1 })}"><img src="${esc(im)}" alt="" onerror="this.src='${FALLBACK_IMG}'" loading="lazy"></button>`).join('')}</div>` : ''}</div>
@@ -848,6 +849,11 @@ function viewProduct(id) {
       <div class="stars">${stars(4.5)} <span style="color:var(--muted); font-size:13px">(4.5)</span></div>
       <div class="pd-price"><b>${fmt(p.price)}</b>${off > 0 ? `<s>${fmt(p.oldPrice)}</s>` : ''}${off > 0 ? ` <span style="color:var(--red); font-weight:700">${t('offPct', { n: off })}</span>` : ''}</div>
       <p class="desc">${esc(desc)}</p>
+      ${(() => { const f = p.fabric || {}; const parts = [];
+        if (f.kamiz) parts.push(`${LANG === 'bn' ? 'কামিজ' : 'Kameez'}: ${esc(f.kamiz)} ${LANG === 'bn' ? 'গজ' : 'yd'}`);
+        if (f.salwar) parts.push(`${LANG === 'bn' ? 'সালোয়ার' : 'Salwar'}: ${esc(f.salwar)} ${LANG === 'bn' ? 'গজ' : 'yd'}`);
+        if (f.orna) parts.push(`${LANG === 'bn' ? 'ওড়না' : 'Orna'}: ${esc(f.orna)} ${LANG === 'bn' ? 'হাত' : 'haat'}`);
+        return parts.length ? `<div class="meta-box"><div>📏 <b>${t('fabricMeasure')}</b> — ${parts.join(' · ')}</div></div>` : ''; })()}
       ${(() => {
         const oos = isOutOfStock(p);
         const stockHtml = `<div class="stock ${oos ? 'low' : 'ok'}" id="pdStock">${oos ? t('outStock') : t('inStock')}</div>`;
@@ -869,7 +875,7 @@ function viewProduct(id) {
       <div style="display:flex; gap:10px; flex-wrap:wrap"><button class="btn btn-dark" id="pdAdd">${t('addCart')}</button><button class="btn" id="pdBuy">${t('buyNow')}</button><button class="btn btn-outline" id="pdWish">${wish.includes(p.id) ? t('wished') : t('addWish')}</button></div>`;
         return stockHtml + sizeHtml + btns;
       })()}
-      <div class="order-alt"><a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="https://wa.me/${esc(SETTINGS.whatsapp)}?text=${waText}">${t('waOrder')}</a></div>
+      <div class="order-alt"><a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="https://wa.me/${esc(SETTINGS.whatsapp)}?text=${waText}">${t('waOrder')}</a>${msgUrl ? ` <a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="${esc(msgUrl)}">${t('msgChat')}</a>` : ''}</div>
       <div class="meta-box">
         <div>${t('metaDelivery')}</div>
         <div>${t('metaPay')}</div>
@@ -1459,21 +1465,6 @@ bindDynamic = function () {
     start();
   }
   /* shop filters */
-  const fSort = $('#fSort');
-  if (fSort) fSort.addEventListener('change', () => { const u = new URLSearchParams(location.hash.split('?')[1] || ''); u.set('sort', fSort.value); u.delete('page'); location.hash = '#shop?' + u.toString(); });
-  const fMax = $('#fMax');
-  if (fMax) fMax.addEventListener('change', () => { const u = new URLSearchParams(location.hash.split('?')[1] || ''); if (fMax.value === '0') u.delete('max'); else u.set('max', fMax.value); u.delete('page'); location.hash = '#shop?' + u.toString(); });
-  const fPrice = $('#fPrice');
-  if (fPrice) {
-    const pMaxV = parseInt(fPrice.max, 10);
-    fPrice.addEventListener('input', () => { const v = $('#fPriceVal'); if (v) v.textContent = fmt(parseInt(fPrice.value, 10)); });
-    fPrice.addEventListener('change', () => {
-      const u = new URLSearchParams(location.hash.split('?')[1] || '');
-      const v = parseInt(fPrice.value, 10);
-      if (v >= pMaxV) u.delete('max'); else u.set('max', String(v));
-      u.delete('page'); location.hash = '#shop?' + u.toString();
-    });
-  }
   const fQ = $('#fQ');
   if (fQ) fQ.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const u = new URLSearchParams(location.hash.split('?')[1] || ''); const v = fQ.value.trim(); if (v) u.set('q', v); else u.delete('q'); u.delete('page'); location.hash = '#shop?' + u.toString(); } });
   /* product detail */
