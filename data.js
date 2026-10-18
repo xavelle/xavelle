@@ -1,4 +1,4 @@
-/* AURA LIFESTYLE — seed data (used when Firestore is empty / not configured)
+/* XAVELLE — seed data (used when Firestore is empty / not configured)
    Hierarchical categories: 13 MAIN categories, each with SUB categories.
    Every product has: main (main-category slug) + sub (sub-category slug). */
 const U = (id) => `https://images.unsplash.com/${id}?q=80&w=800&auto=format&fit=crop`;
@@ -207,10 +207,10 @@ const STAGES = [
 ];
 
 const DEFAULT_SETTINGS = {
-  shopName: 'AURA LIFESTYLE',
+  shopName: 'XAVELLE',
   phone: '09638090000',
   whatsapp: '8809638090000',
-  email: 'care@auralifestyle.com.bd',
+  email: 'care@xavelle.com.bd',
   address: 'Shop-3/1, Eastern Plaza, Hatirpool, Dhaka 1205',
   deliveryCity: 70, deliverySub: 90, deliveryOutside: 110, freeAbove: 2000,
   bkash: '01710000000', nagad: '01710000000',

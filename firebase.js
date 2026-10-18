@@ -1,4 +1,4 @@
-/* AURA LIFESTYLE — Firebase / Firestore layer (real implementation).
+/* XAVELLE — Firebase / Firestore layer (real implementation).
    Auth (email/password) + Firestore, lazy-loaded from CDN.
    Demo fallback: যতক্ষণ FIREBASE_CONFIG-এ আসল মান বসানো না হয়,
    সাইট seed data + localStorage-এ চলে (কিছুই ভাঙে না)।
@@ -106,7 +106,7 @@ async function fb() {
       };
       return _fb;
     } catch (e) {
-      console.warn('[AURA] Firebase init failed, using local mode:', e);
+      console.warn('[XAVELLE] Firebase init failed, using local mode:', e);
       return null;
     }
   })();
@@ -162,7 +162,7 @@ export async function signIn(email, password) {
 export async function signOut() {
   const f = await fb();
   if (!f) return;
-  try { await f.aFns.signOut(f.auth); } catch (e) { console.warn('[AURA] signOut:', e); }
+  try { await f.aFns.signOut(f.auth); } catch (e) { console.warn('[XAVELLE] signOut:', e); }
 }
 
 export async function resetPassword(email) {
@@ -200,7 +200,7 @@ export async function fetchProducts() {
     const list = [];
     snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
     return list.length ? list : null;
-  } catch (e) { console.warn('[AURA] fetchProducts fallback:', e); return null; }
+  } catch (e) { console.warn('[XAVELLE] fetchProducts fallback:', e); return null; }
 }
 
 export async function saveProduct(p) {
@@ -233,7 +233,7 @@ export async function fetchSettings() {
     if (!f) return null;
     const snap = await f.fFns.getDoc(f.fFns.doc(f.db, C.settings, 'main'));
     return snap.exists() ? snap.data() : null;
-  } catch (e) { console.warn('[AURA] fetchSettings fallback:', e); return null; }
+  } catch (e) { console.warn('[XAVELLE] fetchSettings fallback:', e); return null; }
 }
 
 export async function saveSettings(s) {
@@ -269,9 +269,9 @@ export async function saveOrder(order) {
           updatedAt: f.fFns.serverTimestamp(),
         });
       }
-    } catch (e) { console.warn('[AURA] orderStatus mirror failed:', e); }
+    } catch (e) { console.warn('[XAVELLE] orderStatus mirror failed:', e); }
     return ref.id;
-  } catch (e) { console.warn('[AURA] saveOrder failed:', e); return null; }
+  } catch (e) { console.warn('[XAVELLE] saveOrder failed:', e); return null; }
 }
 
 /* অর্ডার প্লেস হলে স্টক কমানো — size-wise, transaction-এ (race-safe)।
@@ -298,7 +298,7 @@ export async function decrementStock(items) {
       }
     });
     return true;
-  } catch (e) { console.warn('[AURA] decrementStock failed:', e); return false; }
+  } catch (e) { console.warn('[XAVELLE] decrementStock failed:', e); return false; }
 }
 
 /* Live stock — products collection-এ change হলে callback(arr)।
@@ -310,9 +310,9 @@ export async function subscribeProducts(cb) {
     return f.fFns.onSnapshot(f.fFns.collection(f.db, C.products), (snap) => {
       const arr = [];
       snap.forEach((d) => arr.push({ id: d.id, ...d.data() }));
-      try { cb(arr); } catch (e) { console.warn('[AURA] subscribeProducts cb failed:', e); }
+      try { cb(arr); } catch (e) { console.warn('[XAVELLE] subscribeProducts cb failed:', e); }
     });
-  } catch (e) { console.warn('[AURA] subscribeProducts failed:', e); return () => {}; }
+  } catch (e) { console.warn('[XAVELLE] subscribeProducts failed:', e); return () => {}; }
 }
 
 /* Guest tracking: public mirror থেকে শুধু status (customer data ছাড়া) */
@@ -322,7 +322,7 @@ export async function fetchOrderStatus(orderId) {
     if (!f) return null;
     const snap = await f.fFns.getDoc(f.fFns.doc(f.db, C.orderStatus, String(orderId)));
     return snap.exists() ? { id: snap.id, ...snap.data() } : null;
-  } catch (e) { console.warn('[AURA] fetchOrderStatus failed:', e); return null; }
+  } catch (e) { console.warn('[XAVELLE] fetchOrderStatus failed:', e); return null; }
 }
 
 /* NOTE: Security Rules-এ orders পড়তে পারে শুধু admin বা অর্ডারের মালিক।
@@ -341,7 +341,7 @@ export async function fetchOrder(orderId, phone) {
     let found = null;
     snap.forEach((d) => { found = { id: d.id, ...d.data() }; });
     return found;
-  } catch (e) { console.warn('[AURA] fetchOrder failed:', e); return null; }
+  } catch (e) { console.warn('[XAVELLE] fetchOrder failed:', e); return null; }
 }
 
 /* Admin: সব অর্ডার, নতুন আগে */
@@ -463,7 +463,7 @@ export async function confirmOrderCancel(docId) {
       return { ok: true, restored, orderId: o.orderId };
     });
     if (result.ok && result.orderId) {
-      try { await updateOrderStatusByOrderId(result.orderId, 'cancelled'); } catch (e) { console.warn('[AURA] cancel mirror failed:', e); }
+      try { await updateOrderStatusByOrderId(result.orderId, 'cancelled'); } catch (e) { console.warn('[XAVELLE] cancel mirror failed:', e); }
     }
     return result;
   } catch (e) { return { ok: false, error: String((e && e.message) || e) }; }
@@ -483,7 +483,7 @@ export async function fetchUserOrders(uid) {
     snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
     list.sort((a, b) => String(b.createdAt || '') < String(a.createdAt || '') ? -1 : 1);
     return list;
-  } catch (e) { console.warn('[AURA] fetchUserOrders failed:', e); return []; }
+  } catch (e) { console.warn('[XAVELLE] fetchUserOrders failed:', e); return []; }
 }
 
 /* ---------- customer profile: নিজের cart + order history (users/{uid}) ----------
@@ -494,7 +494,7 @@ export async function getMyProfile(uid) {
   try {
     const snap = await f.fFns.getDoc(f.fFns.doc(f.db, C.users, uid));
     return snap.exists() ? snap.data() : {};
-  } catch (e) { console.warn('[AURA] getMyProfile failed:', e); return null; }
+  } catch (e) { console.warn('[XAVELLE] getMyProfile failed:', e); return null; }
 }
 /* অ্যাকাউন্টের কার্ট সার্ভারে সেভ (login/logout/device বদলে ফিরে পেতে) */
 export async function saveMyCart(uid, cart) {
@@ -505,7 +505,7 @@ export async function saveMyCart(uid, cart) {
       { cart: Array.isArray(cart) ? cart : [], cartUpdatedAt: f.fFns.serverTimestamp() },
       { merge: true });
     return { ok: true };
-  } catch (e) { console.warn('[AURA] saveMyCart failed:', e); return { ok: false }; }
+  } catch (e) { console.warn('[XAVELLE] saveMyCart failed:', e); return { ok: false }; }
 }
 /* অর্ডার প্লেস হলে নিজের orderIds-এ doc-id যোগ (My Orders list-এর জন্য) */
 export async function appendMyOrder(uid, orderDocId) {
@@ -516,7 +516,7 @@ export async function appendMyOrder(uid, orderDocId) {
       { orderIds: f.fFns.arrayUnion(String(orderDocId)), updatedAt: f.fFns.serverTimestamp() },
       { merge: true });
     return { ok: true };
-  } catch (e) { console.warn('[AURA] appendMyOrder failed:', e); return { ok: false }; }
+  } catch (e) { console.warn('[XAVELLE] appendMyOrder failed:', e); return { ok: false }; }
 }
 /* নিজের অর্ডার: users/{uid}.orderIds → orders/{docId} get (list-rule ছাড়াই, তাই customer-ও দেখতে পারে) */
 export async function fetchMyOrders(uid) {
@@ -532,7 +532,7 @@ export async function fetchMyOrders(uid) {
     snaps.forEach((s) => { if (s && s.exists()) list.push({ id: s.id, ...s.data() }); });
     list.sort((a, b) => String(b.createdAt || '') < String(a.createdAt || '') ? -1 : 1);
     return list;
-  } catch (e) { console.warn('[AURA] fetchMyOrders failed:', e); return []; }
+  } catch (e) { console.warn('[XAVELLE] fetchMyOrders failed:', e); return []; }
 }
 
 /* ================= COUPONS ================= */
@@ -558,7 +558,7 @@ export async function getCoupon(code) {
   try {
     const snap = await f.fFns.getDoc(f.fFns.doc(f.db, C.coupons, normCode(code)));
     return snap.exists() ? { code: snap.id, ...snap.data() } : null;
-  } catch (e) { console.warn('[AURA] getCoupon failed:', e); return null; }
+  } catch (e) { console.warn('[XAVELLE] getCoupon failed:', e); return null; }
 }
 
 /* Checkout: coupon claim — transaction-এ re-validate + usedCount+1 (race-safe) */
@@ -578,7 +578,7 @@ export async function claimCoupon(code, uid, sub) {
       tx.update(ref, upd);
       return { ok: true, coupon: cp };
     });
-  } catch (e) { console.warn('[AURA] claimCoupon failed:', e); return { ok: false, reason: 'bad' }; }
+  } catch (e) { console.warn('[XAVELLE] claimCoupon failed:', e); return { ok: false, reason: 'bad' }; }
 }
 
 /* Admin: সব কুপন */
@@ -629,7 +629,7 @@ export async function saveNewsletterNumber(number) {
       number: String(number).trim(), createdAt: f.fFns.serverTimestamp(),
     });
     return true;
-  } catch (e) { console.warn('[AURA] saveNewsletterNumber failed:', e); return false; }
+  } catch (e) { console.warn('[XAVELLE] saveNewsletterNumber failed:', e); return false; }
 }
 
 export async function fetchNewsletterNumbers() {
@@ -662,7 +662,7 @@ export async function fetchReviews(productId) {
     const list = [];
     snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
     return list;
-  } catch (e) { console.warn('[AURA] fetchReviews failed:', e); return []; }
+  } catch (e) { console.warn('[XAVELLE] fetchReviews failed:', e); return []; }
 }
 
 /* সরাসরি প্রকাশ (storefront-এ "অ্যাডমিন অনুমোদন" নোটিশ নেই) */
@@ -674,7 +674,7 @@ export async function submitReview(review) {
       ...review, status: 'approved', createdAt: f.fFns.serverTimestamp(),
     });
     return true;
-  } catch (e) { console.warn('[AURA] submitReview failed:', e); return false; }
+  } catch (e) { console.warn('[XAVELLE] submitReview failed:', e); return false; }
 }
 
 /* Admin: সব রিভিউ (spam ডিলিটের জন্য) */export async function fetchAllReviews() {
@@ -715,7 +715,7 @@ export async function fetchHomepageReviews() {
     const list = [];
     snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
     return list;
-  } catch (e) { console.warn('[AURA] fetchHomepageReviews failed:', e); return []; }
+  } catch (e) { console.warn('[XAVELLE] fetchHomepageReviews failed:', e); return []; }
 }
 
 /* ================= COMBOS ================= */
@@ -734,7 +734,7 @@ export async function fetchCombos() {
     const list = [];
     snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
     return list;
-  } catch (e) { console.warn('[AURA] fetchCombos failed:', e); return []; }
+  } catch (e) { console.warn('[XAVELLE] fetchCombos failed:', e); return []; }
 }
 
 export async function fetchAllCombos() {
@@ -840,7 +840,7 @@ export async function uploadProductImage(file, productId, apiKey) {
     const form = new FormData();
     form.append('key', apiKey);
     form.append('image', String(b64).split(',')[1]);
-    form.append('name', 'aura-' + Date.now());
+    form.append('name', 'xavelle-' + Date.now());
     const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: form });
     const j = await res.json();
     if (j && j.success && j.data && j.data.url) return { ok: true, url: j.data.url };

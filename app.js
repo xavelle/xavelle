@@ -1,4 +1,4 @@
-/* AURA LIFESTYLE — Phase 1: customer website (no admin panel).
+/* XAVELLE — Phase 1: customer website (no admin panel).
    Hash router SPA. Cart + wishlist in localStorage. Orders → Firestore
    (or localStorage demo mode). All renders escape user-entered text. */
 import { isConfigured, fetchProducts, fetchSettings, saveOrder, fetchOrder, fetchReviews, submitReview, fetchCombos, sizeQty, totalStock, isOutOfStock, subscribeProducts, decrementStock } from './firebase.js?v=20261018';
@@ -97,7 +97,7 @@ const I18N = {
   fBlurb: { bn: 'বাংলাদেশের ইসলামিক লাইফস্টাইল ফ্যাশন ব্র্যান্ড। মানসম্মত পণ্য, সেরা দামে, সারা বাংলাদেশে ডেলিভারি।', en: 'An Islamic lifestyle fashion brand of Bangladesh. Quality products at the best prices, delivered all over Bangladesh.' },
   fHours: { bn: 'হটলাইন: <b style="color:#fff">{p}</b> (সকাল ১০টা – রাত ৯টা)', en: 'Hotline: <b style="color:#fff">{p}</b> (10 AM – 9 PM)' },
   fContact: { bn: 'যোগাযোগ করুন →', en: 'Contact Us →' },
-  fBottom: { bn: '© ২০২৬ AURA LIFESTYLE। সর্বস্বত্ব সংরক্ষিত।', en: '© 2026 AURA LIFESTYLE. All rights reserved.' },
+  fBottom: { bn: '© ২০২৬ XAVELLE। সর্বস্বত্ব সংরক্ষিত।', en: '© 2026 XAVELLE. All rights reserved.' },
   fAbout: { bn: 'আমাদের সম্পর্কে', en: 'About Us' },
   payCOD: { bn: 'ক্যাশ অন ডেলিভারি', en: 'Cash on Delivery' },
   /* 404 */
@@ -344,7 +344,7 @@ const I18N = {
   /* terms */
   tmT: { bn: 'শর্তাবলী', en: 'Terms & Conditions' },
   tmH1: { bn: 'সাধারণ শর্ত', en: 'General' },
-  tmP1: { bn: 'AURA LIFESTYLE থেকে কেনাকাটা করলে আপনি এই শর্তাবলী মেনে নিচ্ছেন।', en: 'By shopping at AURA LIFESTYLE you agree to these terms.' },
+  tmP1: { bn: 'XAVELLE থেকে কেনাকাটা করলে আপনি এই শর্তাবলী মেনে নিচ্ছেন।', en: 'By shopping at XAVELLE you agree to these terms.' },
   tmH2: { bn: 'মূল্য ও প্রাপ্যতা', en: 'Pricing & availability' },
   tmP2: { bn: 'সব মূল্য বাংলাদেশি টাকায় (৳)। স্টক শেষ হলে অর্ডার বাতিল হতে পারে — সেক্ষেত্রে সম্পূর্ণ টাকা ফেরত দেওয়া হবে।', en: 'All prices are in Bangladeshi Taka (৳). Orders may be cancelled if stock runs out — you will be fully refunded.' },
   tmH3: { bn: 'অর্ডার কনফার্মেশন', en: 'Order confirmation' },
@@ -356,8 +356,8 @@ const I18N = {
   tmH6: { bn: 'পরিবর্তন', en: 'Changes' },
   tmP6: { bn: 'এই শর্তাবলী যেকোনো সময় পরিবর্তন হতে পারে; আপডেট এই পেজে প্রকাশ করা হবে।', en: 'These terms may change at any time; updates will be published on this page.' },
   /* about */
-  abT: { bn: 'AURA LIFESTYLE সম্পর্কে', en: 'About AURA LIFESTYLE' },
-  abP1: { bn: 'AURA LIFESTYLE বাংলাদেশের একটি ইসলামিক লাইফস্টাইল ফ্যাশন ব্র্যান্ড। সুন্নাহ অনুসরণে পরিমার্জিত পোশাক, আতর ও লাইফস্টাইল পণ্য আমরা সেরা দামে পৌঁছে দিই।', en: 'AURA LIFESTYLE is an Islamic lifestyle fashion brand of Bangladesh. We deliver refined clothing, attar and lifestyle products inspired by the Sunnah at the best prices.' },
+  abT: { bn: 'XAVELLE সম্পর্কে', en: 'About XAVELLE' },
+  abP1: { bn: 'XAVELLE বাংলাদেশের একটি ইসলামিক লাইফস্টাইল ফ্যাশন ব্র্যান্ড। সুন্নাহ অনুসরণে পরিমার্জিত পোশাক, আতর ও লাইফস্টাইল পণ্য আমরা সেরা দামে পৌঁছে দিই।', en: 'XAVELLE is an Islamic lifestyle fashion brand of Bangladesh. We deliver refined clothing, attar and lifestyle products inspired by the Sunnah at the best prices.' },
   abH2: { bn: 'আমাদের প্রতিশ্রুতি', en: 'Our promise' },
   abL1: { bn: 'যাচাই করা মানসম্মত পণ্য', en: 'Verified quality products' },
   abL2: { bn: 'স্বচ্ছ মূল্য — লুকানো চার্জ নেই', en: 'Transparent pricing — no hidden charges' },
@@ -655,8 +655,8 @@ function viewHome() {
   const mains = visibleMains();
   const banners = (SETTINGS.heroBanners || []).filter((b) => b && b.img);
   const heroSlides = banners.length
-    ? banners.map((b) => `<div class="hc-slide"><img src="${esc(b.img)}" alt="${esc(b.title || 'AURA LIFESTYLE')}" loading="lazy"><div class="hero-cta">${b.title ? `<h2 class="hero-title">${esc(b.title)}</h2>` : ''}<a class="btn" href="${esc(b.link || '#shop')}">${t('shopNow')}</a></div></div>`).join('')
-    : `<div class="hc-slide"><img src="cover.jpg" alt="AURA LIFESTYLE"><div class="hero-cta"><a class="btn" href="#shop">${t('shopNow')}</a></div></div>
+    ? banners.map((b) => `<div class="hc-slide"><img src="${esc(b.img)}" alt="${esc(b.title || 'XAVELLE')}" loading="lazy"><div class="hero-cta">${b.title ? `<h2 class="hero-title">${esc(b.title)}</h2>` : ''}<a class="btn" href="${esc(b.link || '#shop')}">${t('shopNow')}</a></div></div>`).join('')
+    : `<div class="hc-slide"><img src="cover.jpg?v=20261018c" alt="XAVELLE"><div class="hero-cta"><a class="btn" href="#shop">${t('shopNow')}</a></div></div>
       <div class="hc-slide hc-promo"><div class="hc-promo-txt"><h2>${t('flashPromoT')}</h2><p>${t('flashPromoS')}</p><a class="btn" href="#shop">${t('viewOffer')}</a></div></div>`;
   const nSlides = banners.length || 2;
   return `
@@ -1197,12 +1197,12 @@ async function placeOrder(e) {
     const remoteId = await saveOrder(order);
     if (!remoteId) { localOrders.push(order); saveLS('aura_orders_local', localOrders); }
     else {
-      try { await decrementStock(order.items); } catch (e) { console.warn('[AURA] stock decrement skipped:', e); }
+      try { await decrementStock(order.items); } catch (e) { console.warn('[XAVELLE] stock decrement skipped:', e); }
       /* লগইন থাকলে নিজের orderIds-এ যোগ — My Orders-এ দেখাবে */
       try {
         const ouid = sessUser && sessUser.uid && !/^\S+@\S+\.\S+$/.test(sessUser.uid) ? sessUser.uid : '';
         if (ouid && fb && typeof fb.appendMyOrder === 'function') await fb.appendMyOrder(ouid, remoteId);
-      } catch (e) { console.warn('[AURA] appendMyOrder skipped:', e); }
+      } catch (e) { console.warn('[XAVELLE] appendMyOrder skipped:', e); }
     }
     cart = [];
     persistCart();

@@ -1,4 +1,4 @@
-/* AURA LIFESTYLE — Admin Panel logic.
+/* XAVELLE — Admin Panel logic.
    Firebase email/password login (no embedded password).
    Role-based tabs: owner (all), manager (no settings/staff), assistant (orders only).
    Sections: Dashboard, Products, Categories, Orders, Reviews, Newsletter, Import, Staff, Settings. */

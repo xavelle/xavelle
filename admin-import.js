@@ -1,4 +1,4 @@
-/* AURA LIFESTYLE — Bulk Import engine (classic script, no dependencies except XLSX global for .xlsx)
+/* XAVELLE — Bulk Import engine (classic script, no dependencies except XLSX global for .xlsx)
    Exposes: window.AuraImport = { parseCSV, parseXLSXFile, normalizeRows, validateRows, buildProduct, runImport, downloadTemplate, HEADERS } */
 
 (function () {
@@ -246,7 +246,7 @@
     var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'aura-bulk-import-template.csv';
+    a.download = 'xavelle-bulk-import-template.csv';
     document.body.appendChild(a); a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
   }
