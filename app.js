@@ -554,7 +554,7 @@ function updateBadges() {
     $('#cbCount').textContent = n;
     $('#cbTotal').textContent = fmt(cartTotal());
     const hide = /^(cart|checkout)/.test(location.hash.replace(/^#/, ''));
-    b.classList.toggle('show', n > 0 && !hide);
+    b.classList.toggle('show', n > 0 && !hide); document.body.classList.toggle('has-bubble', n > 0 && !hide);
   }
 }
 
@@ -860,13 +860,13 @@ function viewProduct(id) {
         const sizes = p.sizes || [];
         const naSizes = sizes.filter((s) => sizeQty(p, s) <= 0);
         const sizeHtml = sizes.length
-          ? `<div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center"><b>${t('sizeSel')}</b><button class="btn btn-outline btn-sm" id="sizeGuideBtn">📏 ${t('sizeGuide')}</button></div>
+          ? `<div ${sizes.length > 1 ? '' : 'hidden'}><div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center"><b>${t('sizeSel')}</b><button class="btn btn-outline btn-sm" id="sizeGuideBtn">📏 ${t('sizeGuide')}</button></div>
       <div class="size-row" id="sizeRow">${sizes.map((s) => {
             const dis = sizeQty(p, s) <= 0;
             return `<button class="size-btn${dis ? ' sold-out' : ''}" data-size="${esc(s)}" ${dis ? 'disabled' : ''}>${esc(s)}</button>`;
           }).join('')}</div>
       ${naSizes.length ? `<div class="muted" id="sizeNA" style="font-size:13px; margin-top:6px">${esc(naSizes.join(', '))} — ${t('sizeNA')}</div>` : ''}
-      <div class="err" id="sizeErr"></div>`
+      <div class="err" id="sizeErr"></div></div>`
           : '';
         const btns = oos
           ? `<div style="display:flex; gap:10px; flex-wrap:wrap"><button class="btn btn-outline" id="pdWish">${wish.includes(p.id) ? t('wished') : t('addWish')}</button></div>
@@ -1484,8 +1484,8 @@ bindDynamic = function () {
     const qMinus = $('#qMinus'), qPlus = $('#qPlus'), pdAdd = $('#pdAdd'), pdBuy = $('#pdBuy');
     if (qMinus) qMinus.addEventListener('click', () => { qty = Math.max(1, qty - 1); $('#qVal').textContent = qty; });
     if (qPlus) qPlus.addEventListener('click', () => { qty = Math.min(99, qty + 1); $('#qVal').textContent = qty; });
-    if (pdAdd) pdAdd.addEventListener('click', () => { if (!selSize && prodById(pid)?.sizes?.length) { $('#sizeErr').textContent = t('sizeErr'); return; } addToCart(pid, qty, selSize); });
-    if (pdBuy) pdBuy.addEventListener('click', () => { if (!selSize && prodById(pid)?.sizes?.length) { $('#sizeErr').textContent = t('sizeErr'); return; } addToCart(pid, qty, selSize); location.hash = '#checkout'; });
+    if (pdAdd) pdAdd.addEventListener('click', () => { const _sz = prodById(pid)?.sizes || []; if (!selSize && _sz.length > 1) { $('#sizeErr').textContent = t('sizeErr'); return; } addToCart(pid, qty, selSize || _sz[0] || null); });
+    if (pdBuy) pdBuy.addEventListener('click', () => { const _sz = prodById(pid)?.sizes || []; if (!selSize && _sz.length > 1) { $('#sizeErr').textContent = t('sizeErr'); return; } addToCart(pid, qty, selSize || _sz[0] || null); location.hash = '#checkout'; });
     $('#pdWish').addEventListener('click', () => toggleWish(pid));
     $('#shareCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(location.href); toast(t('linkCopied')); } catch { toast(t('linkCopyFail')); } });
     loadReviews(pid);
