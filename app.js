@@ -554,7 +554,7 @@ function updateBadges() {
     $('#cbCount').textContent = n;
     $('#cbTotal').textContent = fmt(cartTotal());
     const hide = /^(cart|checkout)/.test(location.hash.replace(/^#/, ''));
-    b.classList.toggle('show', n > 0 && !hide); document.body.classList.toggle('has-bubble', n > 0 && !hide);
+    b.classList.toggle('show', n > 0 && !hide);
   }
 }
 
@@ -685,7 +685,7 @@ function viewHome() {
   <div class="main-cat-grid">${mains.map((m) => {
     const subNames = m.subs.slice(0, 3).map((s) => LANG === 'bn' ? s.bn : s.en).join(' • ');
     const cimg = ((SETTINGS.catImgs || {})[m.slug]) || m.img;
-    return `<a class="main-cat-card" href="#shop?main=${m.slug}"><img src="${esc(cimg)}" alt="${esc(LANG === 'bn' ? m.bn : m.en)}" onerror="this.src='${FALLBACK_IMG}'" loading="lazy"><span class="mc-name">${esc(LANG === 'bn' ? m.bn : m.en)}</span><span class="mc-subs">${esc(subNames)}</span></a>`;
+    return `<a class="main-cat-card" href="#shop?main=${m.slug}"><span class="mc-img"><img src="${esc(cimg)}" alt="${esc(LANG === 'bn' ? m.bn : m.en)}" onerror="this.src='${FALLBACK_IMG}'" loading="lazy"></span><span class="mc-name">${esc(LANG === 'bn' ? m.bn : m.en)}</span><span class="mc-subs">${esc(subNames)}</span></a>`;
   }).join('')}</div></section>
 
   ${flash.length ? `<section class="section"><div class="flash-box"><div class="flash-head"><h2>${t('flash')}</h2><div class="countdown" id="countdown"></div></div><div class="prod-row" style="margin-top:14px">${flash.map(prodCard).join('')}</div></div></section>` : ''}
@@ -859,14 +859,15 @@ function viewProduct(id) {
         const stockHtml = `<div class="stock ${oos ? 'low' : 'ok'}" id="pdStock">${oos ? t('outStock') : t('inStock')}</div>`;
         const sizes = p.sizes || [];
         const naSizes = sizes.filter((s) => sizeQty(p, s) <= 0);
+        const showGuide = ['men', 'women', 'kids'].includes(p.main);
         const sizeHtml = sizes.length
-          ? `<div ${sizes.length > 1 ? '' : 'hidden'}><div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center"><b>${t('sizeSel')}</b><button class="btn btn-outline btn-sm" id="sizeGuideBtn">📏 ${t('sizeGuide')}</button></div>
+          ? `<div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center"><b>${t('sizeSel')}</b>${showGuide ? `<button class="btn btn-outline btn-sm" id="sizeGuideBtn">📏 ${t('sizeGuide')}</button>` : ''}</div>
       <div class="size-row" id="sizeRow">${sizes.map((s) => {
             const dis = sizeQty(p, s) <= 0;
             return `<button class="size-btn${dis ? ' sold-out' : ''}" data-size="${esc(s)}" ${dis ? 'disabled' : ''}>${esc(s)}</button>`;
           }).join('')}</div>
       ${naSizes.length ? `<div class="muted" id="sizeNA" style="font-size:13px; margin-top:6px">${esc(naSizes.join(', '))} — ${t('sizeNA')}</div>` : ''}
-      <div class="err" id="sizeErr"></div></div>`
+      <div class="err" id="sizeErr"></div>`
           : '';
         const btns = oos
           ? `<div style="display:flex; gap:10px; flex-wrap:wrap"><button class="btn btn-outline" id="pdWish">${wish.includes(p.id) ? t('wished') : t('addWish')}</button></div>
@@ -1484,8 +1485,8 @@ bindDynamic = function () {
     const qMinus = $('#qMinus'), qPlus = $('#qPlus'), pdAdd = $('#pdAdd'), pdBuy = $('#pdBuy');
     if (qMinus) qMinus.addEventListener('click', () => { qty = Math.max(1, qty - 1); $('#qVal').textContent = qty; });
     if (qPlus) qPlus.addEventListener('click', () => { qty = Math.min(99, qty + 1); $('#qVal').textContent = qty; });
-    if (pdAdd) pdAdd.addEventListener('click', () => { const _sz = prodById(pid)?.sizes || []; if (!selSize && _sz.length > 1) { $('#sizeErr').textContent = t('sizeErr'); return; } addToCart(pid, qty, selSize || _sz[0] || null); });
-    if (pdBuy) pdBuy.addEventListener('click', () => { const _sz = prodById(pid)?.sizes || []; if (!selSize && _sz.length > 1) { $('#sizeErr').textContent = t('sizeErr'); return; } addToCart(pid, qty, selSize || _sz[0] || null); location.hash = '#checkout'; });
+    if (pdAdd) pdAdd.addEventListener('click', () => { if (!selSize && prodById(pid)?.sizes?.length) { $('#sizeErr').textContent = t('sizeErr'); return; } addToCart(pid, qty, selSize); });
+    if (pdBuy) pdBuy.addEventListener('click', () => { if (!selSize && prodById(pid)?.sizes?.length) { $('#sizeErr').textContent = t('sizeErr'); return; } addToCart(pid, qty, selSize); location.hash = '#checkout'; });
     $('#pdWish').addEventListener('click', () => toggleWish(pid));
     $('#shareCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(location.href); toast(t('linkCopied')); } catch { toast(t('linkCopyFail')); } });
     loadReviews(pid);
