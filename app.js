@@ -466,13 +466,14 @@ function buildNav() {
   const cur = location.hash.replace('#', '');
   const homeCls = cur === '' || cur.startsWith('home') ? 'active' : '';
   const shopCls = cur.startsWith('shop') ? 'active' : '';
+  const offersCls = cur.startsWith('offers') ? 'active' : '';
   const items = visibleMains().map((m) => {
     const label = LANG === 'bn' ? m.bn : m.en;
     const active = cur === 'shop?main=' + m.slug || cur.startsWith('shop?main=' + m.slug + '&') ? 'active' : '';
     const subs = m.subs.map((s) => `<a href="#shop?main=${m.slug}&sub=${s.slug}">${esc(LANG === 'bn' ? s.bn : s.en)}</a>`).join('');
     return `<div class="nav-item"><a href="#shop?main=${m.slug}" class="${active}">${esc(label)}</a><div class="mega"><div class="mega-head">${esc(label)}</div>${subs}</div></div>`;
   }).join('');
-  $('#navCats').innerHTML = `<a href="#home" class="${homeCls}">${t('home')}</a><a href="#shop" class="${shopCls}">${t('shop')}</a>${items}`;
+  $('#navCats').innerHTML = `<a href="#home" class="${homeCls}">${t('home')}</a><a href="#shop" class="${shopCls}">${t('shop')}</a><a href="#offers" class="${offersCls}">${t('offers')}</a>${items}`;
   renderBottomNav(cur);
 }
 
@@ -664,6 +665,7 @@ function viewHome() {
   const flash = PRODUCTS.filter((p) => hasTag(p, 'flash-sale') && !isOutOfStock(p) && p.visible !== false && catVisible(p)).slice(0, 4);
   const best = PRODUCTS.filter((p) => hasTag(p, 'best-seller') && p.visible !== false && catVisible(p)).slice(0, 4);
   const news = PRODUCTS.filter((p) => hasTag(p, 'new') && p.visible !== false && catVisible(p)).slice(0, 8);
+  const offers = PRODUCTS.filter((p) => p.visible !== false && catVisible(p) && p.oldPrice > p.price && !isOutOfStock(p)).slice(0, 4);
   const mains = visibleMains();
   const banners = (SETTINGS.heroBanners || []).filter((b) => b && b.img);
   const heroSlides = banners.length
@@ -689,6 +691,7 @@ function viewHome() {
   }).join('')}</div></section>
 
   ${flash.length ? `<section class="section"><div class="flash-box"><div class="flash-head"><h2>${t('flash')}</h2><div class="countdown" id="countdown"></div></div><div class="prod-row" style="margin-top:14px">${flash.map(prodCard).join('')}</div></div></section>` : ''}
+  ${offers.length ? `<section class="section"><div class="section-head"><h2>${t('offersTitle')}</h2><a href="#offers">${t('viewAll')} →</a></div><div class="prod-row">${offers.map(prodCard).join('')}</div></section>` : ''}
   ${news.length ? `<section class="section"><div class="section-head"><h2>${t('newArr')}</h2><a href="#shop">${t('viewAll')} →</a></div><div class="prod-row">${news.map(prodCard).join('')}</div></section>` : ''}
   <div id="homeCombos"></div>
 
