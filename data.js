@@ -208,12 +208,12 @@ const STAGES = [
 
 const DEFAULT_SETTINGS = {
   shopName: 'XAVELLE',
-  phone: '09638090000',
-  whatsapp: '8809638090000',
+  phone: '01887099973',
+  whatsapp: '8801887099973',
   email: 'care@xavelle.com.bd',
   address: 'Shop-3/1, Eastern Plaza, Hatirpool, Dhaka 1205',
   deliveryCity: 70, deliverySub: 90, deliveryOutside: 110, freeAbove: 2000,
-  bkash: '01710000000', nagad: '01710000000',
+  bkash: '01887099973', nagad: '01887099973',
   sections: { hero: true, flashSale: true, combo: true, testimonials: true, bestSellers: true, newArrivals: true },
   hiddenCategories: [], /* main-category slugs hidden from storefront */
   social: { facebook: '', instagram: '', youtube: '' }, /* footer social icons */
