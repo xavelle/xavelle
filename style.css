@@ -150,7 +150,7 @@ img { max-width: 100%; display: block; }
 .prod-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; transition: transform .2s, box-shadow .2s; position: relative; }
 .prod-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
 .prod-card .p-img { position: relative; }
-.prod-card .p-img img { width: 100%; height: 220px; object-fit: cover; }
+.prod-card .p-img img { width: 100%; height: 220px; object-fit: cover; object-position: top; }
 .badge-off { position: absolute; top: 10px; left: 10px; background: var(--red); color: #fff; font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 999px; }
 .badge-tag { position: absolute; top: 10px; right: 10px; background: var(--navy); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 999px; }
 .wish-btn { position: absolute; bottom: 10px; right: 10px; width: 36px; height: 36px; border-radius: 50%; border: none; background: rgba(255, 255, 255, .92); font-size: 17px; line-height: 1; box-shadow: 0 2px 8px rgba(0, 0, 0, .15); }
@@ -268,7 +268,7 @@ img { max-width: 100%; display: block; }
 .pay-opt.sel b { padding-right: 30px; }
 .pay-opt b { display: block; font-size: 16px; color: var(--navy); }
 .pay-opt .pay-bn { font-weight: 600; font-size: 14px; color: var(--muted); }
-.pay-opt span { font-size: 13px; color: var(--muted); display: block; margin-top: 3px; }
+.pay-opt span { font-size: 13px; color: var(--muted); display: block; margin-top: 3px; overflow-wrap: break-word; }
 .pay-num { background: #fff; border: 1.5px dashed var(--gold); border-radius: 10px; padding: 9px 12px; margin-top: 9px; font-size: 14px; color: var(--ink); }
 .pay-num b { display: inline; font-size: 16px; color: var(--gold); letter-spacing: 1px; }
 .trx-input { margin-top: 9px; padding: 10px 12px; width: 100%; border: 1.5px solid var(--line); border-radius: 10px; font-size: 15px; font-family: inherit; }

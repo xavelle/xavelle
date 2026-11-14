@@ -569,7 +569,7 @@ function onSearchInput(e) {
   const hits = PRODUCTS.filter((p) => p.visible !== false && catVisible(p) && p !== exactSku && (p.nameEn + ' ' + p.nameBn + ' ' + (p.sku || '') + ' ' + prodMainLabel(p)).toLowerCase().includes(q)).slice(0, 6);
   const ordered = exactSku ? [exactSku, ...hits].slice(0, 6) : hits;
   if (!ordered.length) { box.classList.remove('open'); return; }
-  box.innerHTML = ordered.map((p) => `<a href="#product/${p.id}"><img src="${esc(p.img)}" onerror="this.src='${FALLBACK_IMG}'" alt=""><span>${esc(LANG === 'bn' ? p.nameBn : p.nameEn)}${p.sku ? `<small class="s-sku">${esc(p.sku)}</small>` : ''}</span><span class="s-price">${fmt(p.price)}</span></a>`).join('');
+  box.innerHTML = ordered.map((p) => `<a href="#product/${p.id}"><img loading="lazy" src="${esc(p.img)}" onerror="this.src='${FALLBACK_IMG}'" alt=""><span>${esc(LANG === 'bn' ? p.nameBn : p.nameEn)}${p.sku ? `<small class="s-sku">${esc(p.sku)}</small>` : ''}</span><span class="s-price">${fmt(p.price)}</span></a>`).join('');
   box.classList.add('open');
 }
 
@@ -695,7 +695,7 @@ function viewHome() {
   ${news.length ? `<section class="section"><div class="section-head"><h2>${t('newArr')}</h2><a href="#shop">${t('viewAll')} →</a></div><div class="prod-row">${news.map(prodCard).join('')}</div></section>` : ''}
   <div id="homeCombos"></div>
 
-  <section class="section"><div class="section-head"><h2>${t('best')}</h2><a href="#shop">${t('viewAll')} →</a></div><div class="prod-row">${best.map(prodCard).join('')}</div></section>
+  ${best.length ? `<section class="section"><div class="section-head"><h2>${t('best')}</h2><a href="#shop">${t('viewAll')} →</a></div><div class="prod-row">${best.map(prodCard).join('')}</div></section>` : ''}
 
   <div class="trust-row">
     <div class="trust-item"><span class="trust-ic">✓</span><span>${t('trust1')}</span></div>
@@ -993,9 +993,9 @@ function viewCart() {
     cart.map((i) => {
       if (i.combo) {
         const c = i.combo, nm = esc(LANG === 'bn' ? c.nameBn : c.nameEn);
-        return `<div class="cart-item"><img src="${esc(c.img || '')}" onerror="this.src='${FALLBACK_IMG}'" alt=""><div class="ci-info"><b>🎁 ${nm}</b><span>${c.freeDel ? '🚚 ' + t('freeDel') + ' • ' : ''}${fmt(c.price)}</span><button class="ci-remove" onclick="removeItem('${esc(i.id)}','')">${t('remove')}</button></div><div class="ci-qty"><button onclick="setQty('${esc(i.id)}','',-1)">−</button><b>${i.qty}</b><button onclick="setQty('${esc(i.id)}','',1)">+</button></div><b>${fmt(c.price * i.qty)}</b></div>`;
+        return `<div class="cart-item"><img loading="lazy" src="${esc(c.img || '')}" onerror="this.src='${FALLBACK_IMG}'" alt=""><div class="ci-info"><b>🎁 ${nm}</b><span>${c.freeDel ? '🚚 ' + t('freeDel') + ' • ' : ''}${fmt(c.price)}</span><button class="ci-remove" onclick="removeItem('${esc(i.id)}','')">${t('remove')}</button></div><div class="ci-qty"><button onclick="setQty('${esc(i.id)}','',-1)">−</button><b>${i.qty}</b><button onclick="setQty('${esc(i.id)}','',1)">+</button></div><b>${fmt(c.price * i.qty)}</b></div>`;
       }
-      const p = prodById(i.id); if (!p) return ''; return `<div class="cart-item"><img src="${esc(p.img)}" onerror="this.src='${FALLBACK_IMG}'" alt=""><div class="ci-info"><b>${esc(LANG === 'bn' ? p.nameBn : p.nameEn)}</b><span>${i.size ? t('sizeLbl') + esc(i.size) + ' • ' : ''}${fmt(p.price)}</span><button class="ci-remove" onclick="removeItem('${esc(i.id)}','${esc(i.size)}')">${t('remove')}</button></div><div class="ci-qty"><button onclick="setQty('${esc(i.id)}','${esc(i.size)}',-1)">−</button><b>${i.qty}</b><button onclick="setQty('${esc(i.id)}','${esc(i.size)}',1)">+</button></div><b>${fmt(p.price * i.qty)}</b></div>`; }).join('')}
+      const p = prodById(i.id); if (!p) return ''; return `<div class="cart-item"><img loading="lazy" src="${esc(p.img)}" onerror="this.src='${FALLBACK_IMG}'" alt=""><div class="ci-info"><b>${esc(LANG === 'bn' ? p.nameBn : p.nameEn)}</b><span>${i.size ? t('sizeLbl') + esc(i.size) + ' • ' : ''}${fmt(p.price)}</span><button class="ci-remove" onclick="removeItem('${esc(i.id)}','${esc(i.size)}')">${t('remove')}</button></div><div class="ci-qty"><button onclick="setQty('${esc(i.id)}','${esc(i.size)}',-1)">−</button><b>${i.qty}</b><button onclick="setQty('${esc(i.id)}','${esc(i.size)}',1)">+</button></div><b>${fmt(p.price * i.qty)}</b></div>`; }).join('')}
   </div><div class="card">
     <h3>${t('orderSummary')}</h3>
     ${total >= freeAbove ? `<p style="color:var(--green); font-weight:700; margin:10px 0">${t('freeShipWon')}</p>` : `<p style="font-size:13px; color:var(--muted); margin:10px 0">${t('freeShipMore', { x: fmt(freeAbove - total) })}</p><div class="ship-progress"><i style="width:${pct}%"></i></div>`}
