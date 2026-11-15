@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xavelle — হাতে বোনা ঐতিহ্যের গল্প</title>
+<meta name="description" content="স্ক্রল করুন আর দেখুন — তাঁত থেকে আপনার আলমারি পর্যন্ত Xavelle-এর যাত্রা।">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Noto+Serif+Bengali:wght@600;800&family=Noto+Sans+Bengali:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d0a07; --gold:#c9a24b; --gold-soft:#e6c87a; --cream:#f3ead8; --muted:#b8ab90;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--cream);font-family:'Noto Sans Bengali',sans-serif;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:16px 22px;
+    background:linear-gradient(180deg,rgba(13,10,7,.75),rgba(13,10,7,0));
+  }
+  .brand{font-family:'Playfair Display',serif;font-size:22px;letter-spacing:.35em;color:var(--cream)}
+  .brand span{color:var(--gold)}
+  .shop-link{
+    border:1px solid var(--gold);color:var(--gold-soft);
+    padding:8px 16px;border-radius:999px;font-size:14px;font-weight:500;
+    transition:.25s;background:rgba(13,10,7,.35);backdrop-filter:blur(4px);
+  }
+  .shop-link:hover{background:var(--gold);color:#171106}
+
+  /* ---------- scroll film ---------- */
+  .film-wrap{height:420vh;position:relative}
+  .stage{
+    position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:#000;
+  }
+  .stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .stage::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:
+      linear-gradient(180deg,rgba(13,10,7,.45) 0%,rgba(13,10,7,0) 22%,rgba(13,10,7,0) 55%,rgba(13,10,7,.72) 100%);
+  }
+  .caption{
+    position:absolute;left:0;right:0;bottom:11%;z-index:5;
+    text-align:center;padding:0 24px;opacity:0;transform:translateY(26px);
+    pointer-events:none;
+  }
+  .caption .kicker{
+    font-family:'Playfair Display',serif;letter-spacing:.45em;font-size:12px;
+    color:var(--gold-soft);text-transform:uppercase;margin-bottom:14px;
+  }
+  .caption h2{
+    font-family:'Noto Serif Bengali',serif;font-weight:800;
+    font-size:clamp(30px,6.2vw,58px);line-height:1.25;color:var(--cream);
+    text-shadow:0 4px 34px rgba(0,0,0,.65);
+  }
+  .caption p{margin-top:12px;font-size:clamp(15px,2.4vw,19px);color:var(--muted)}
+  .caption .wordmark{
+    font-family:'Playfair Display',serif;font-size:clamp(38px,8vw,74px);
+    letter-spacing:.3em;color:var(--cream);text-shadow:0 4px 34px rgba(0,0,0,.65);
+  }
+  .caption .tagline{font-family:'Playfair Display',serif;font-style:italic;color:var(--gold-soft);font-size:clamp(16px,3vw,22px);margin-top:10px;letter-spacing:.08em}
+  .caption .cta{
+    display:inline-block;margin-top:24px;pointer-events:auto;
+    background:var(--gold);color:#171106;font-weight:700;font-size:16px;
+    padding:13px 30px;border-radius:999px;transition:.25s;
+  }
+  .caption .cta:hover{background:var(--gold-soft)}
+  .scroll-hint{
+    position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:6;
+    text-align:center;color:var(--muted);font-size:13px;letter-spacing:.12em;
+    animation:bob 1.8s ease-in-out infinite;
+  }
+  .scroll-hint .arrow{display:block;font-size:20px;color:var(--gold-soft);margin-top:2px}
+  @keyframes bob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,8px)}}
+  .progress{
+    position:absolute;top:0;left:0;height:3px;background:var(--gold);width:0%;z-index:8;
+  }
+  .loader{
+    position:absolute;inset:0;z-index:7;display:flex;align-items:center;justify-content:center;
+    color:var(--muted);font-size:14px;letter-spacing:.1em;background:#000;transition:opacity .6s;
+  }
+
+  /* ---------- products ---------- */
+  .collection{max-width:1120px;margin:0 auto;padding:88px 22px 30px}
+  .collection .head{text-align:center;margin-bottom:42px}
+  .collection .head .kicker{font-family:'Playfair Display',serif;letter-spacing:.45em;font-size:12px;color:var(--gold-soft);text-transform:uppercase}
+  .collection .head h3{font-family:'Noto Serif Bengali',serif;font-size:clamp(26px,4.6vw,40px);font-weight:800;margin-top:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px}
+  .card{
+    background:#171208;border:1px solid #2b2113;border-radius:18px;overflow:hidden;
+    transition:.3s;
+  }
+  .card:hover{transform:translateY(-5px);border-color:var(--gold)}
+  .card img{width:100%;height:250px;object-fit:cover;object-position:top;display:block}
+  .card .body{padding:16px 18px 20px}
+  .card h4{font-size:18px;font-weight:700}
+  .card .en{font-size:12.5px;color:var(--muted);letter-spacing:.04em;margin-top:2px}
+  .card .price{color:var(--gold-soft);font-weight:700;font-size:18px;margin-top:10px}
+  .card .btn{
+    display:inline-block;margin-top:12px;border:1px solid var(--gold);color:var(--gold-soft);
+    padding:8px 18px;border-radius:999px;font-size:14px;transition:.25s;
+  }
+  .card .btn:hover{background:var(--gold);color:#171106}
+
+  /* ---------- footer ---------- */
+  footer{text-align:center;padding:70px 22px 46px}
+  footer .wordmark{font-family:'Playfair Display',serif;font-size:30px;letter-spacing:.3em}
+  footer .tagline{font-family:'Playfair Display',serif;font-style:italic;color:var(--gold-soft);margin-top:8px}
+  .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:28px}
+  .cta-row a{padding:12px 26px;border-radius:999px;font-weight:700;font-size:15px;transition:.25s}
+  .cta-wa{background:#1faa55;color:#fff}
+  .cta-wa:hover{background:#23c163}
+  .cta-ms{background:#0a7aff;color:#fff}
+  .cta-ms:hover{background:#2b8fff}
+  .credit{margin-top:36px;font-size:12px;color:#6f6450;line-height:1.7}
+  .credit a{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">XAVELLE<span>.</span></a>
+  <a class="shop-link" href="index.html">দোকানে যান →</a>
+</header>
+
+<!-- ======= SCROLL FILM ======= -->
+<section class="film-wrap" id="filmWrap">
+  <div class="stage" id="stage">
+    <div class="progress" id="progress"></div>
+    <canvas id="film"></canvas>
+    <div class="loader" id="loader">গল্প লোড হচ্ছে…</div>
+
+    <div class="caption" data-from="0.03" data-to="0.24">
+      <div class="kicker">Chapter One</div>
+      <h2>হাতে বোনা ঐতিহ্য</h2>
+      <p>প্রতিটা শাড়ির পেছনে তাঁতির ঘণ্টার পর ঘণ্টা যত্ন</p>
+    </div>
+
+    <div class="caption" data-from="0.32" data-to="0.52">
+      <div class="kicker">Chapter Two</div>
+      <h2>প্রতিটা সুতোয় যত্ন</h2>
+      <p>খাঁটি কাপড়, নিখুঁত বুনন — কোনো তাড়াহুড়ো নেই</p>
+    </div>
+
+    <div class="caption" data-from="0.58" data-to="0.78">
+      <div class="kicker">Chapter Three</div>
+      <h2>ঐতিহ্য থেকে আপনার আলমারিতে</h2>
+      <p>তাঁতির হাতের কাজ, সরাসরি আপনার কাছে</p>
+    </div>
+
+    <div class="caption" data-from="0.84" data-to="1.01">
+      <div class="wordmark">XAVELLE</div>
+      <div class="tagline">Always with Sunnah</div>
+      <a class="cta" href="#collection">কালেকশন দেখুন ↓</a>
+    </div>
+
+    <div class="scroll-hint" id="scrollHint">স্ক্রল করুন<span class="arrow">↓</span></div>
+  </div>
+</section>
+
+<!-- ======= PRODUCTS ======= -->
+<section class="collection" id="collection">
+  <div class="head">
+    <div class="kicker">The Collection</div>
+    <h3>আমাদের বাছাই করা কালেকশন</h3>
+  </div>
+  <div class="grid">
+    <article class="card">
+      <img src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop" alt="জামদানি শাড়ি" loading="lazy">
+      <div class="body">
+        <h4>জামদানি শাড়ি</h4>
+        <div class="en">Jamdani Saree</div>
+        <div class="price">৳৩,৪৯০</div>
+        <a class="btn" href="index.html">দোকানে দেখুন</a>
+      </div>
+    </article>
+    <article class="card">
+      <img src="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?q=80&w=800&auto=format&fit=crop" alt="কটন কুর্তি" loading="lazy">
+      <div class="body">
+        <h4>কটন কুর্তি</h4>
+        <div class="en">Cotton Kurti</div>
+        <div class="price">৳১,২৫০</div>
+        <a class="btn" href="index.html">দোকানে দেখুন</a>
+      </div>
+    </article>
+    <article class="card">
+      <img src="https://images.unsplash.com/photo-1610652492500-ded49ceeb378?q=80&w=800&auto=format&fit=crop" alt="লাক্সারি সিল্ক পাঞ্জাবি" loading="lazy">
+      <div class="body">
+        <h4>লাক্সারি সিল্ক পাঞ্জাবি</h4>
+        <div class="en">Luxury Silk Panjabi</div>
+        <div class="price">৳২,৬১৮</div>
+        <a class="btn" href="index.html">দোকানে দেখুন</a>
+      </div>
+    </article>
+    <article class="card">
+      <img src="https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=800&auto=format&fit=crop" alt="রয়্যাল উদ আতর" loading="lazy">
+      <div class="body">
+        <h4>রয়্যাল উদ আতর (১২মি.লি.)</h4>
+        <div class="en">Royal Oud Attar</div>
+        <div class="price">৳৮৫০</div>
+        <a class="btn" href="index.html">দোকানে দেখুন</a>
+      </div>
+    </article>
+  </div>
+</section>
+
+<footer>
+  <div class="wordmark">XAVELLE</div>
+  <div class="tagline">Always with Sunnah</div>
+  <div class="cta-row">
+    <a class="cta-wa" href="https://wa.me/8801887099973" target="_blank" rel="noopener">WhatsApp-এ অর্ডার করুন</a>
+    <a class="cta-ms" href="https://m.me/61596225310656" target="_blank" rel="noopener">Messenger-এ মেসেজ করুন</a>
+  </div>
+  <p class="credit">
+    তাঁতের ভিডিও: Biswarup Ganguly, Wikimedia Commons —
+    <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a> লাইসেন্সে ব্যবহৃত।<br>
+    © Xavelle — সব অধিকার সংরক্ষিত।
+  </p>
+</footer>
+
+<video id="filmSrc" src="story-film.mp4" muted playsinline preload="auto" style="display:none"></video>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  gsap.registerPlugin(ScrollTrigger);
+
+  var video   = document.getElementById('filmSrc');
+  var canvas  = document.getElementById('film');
+  var ctx     = canvas.getContext('2d');
+  var loader  = document.getElementById('loader');
+  var hint    = document.getElementById('scrollHint');
+  var bar     = document.getElementById('progress');
+  var captions = Array.prototype.slice.call(document.querySelectorAll('.caption'));
+
+  var target = 0, current = 0, ready = false;
+
+  function fitCanvas(){
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width  = Math.round(canvas.clientWidth  * dpr);
+    canvas.height = Math.round(canvas.clientHeight * dpr);
+    draw();
+  }
+
+  function draw(){
+    if (!ready || !video.videoWidth) return;
+    var cw = canvas.width, ch = canvas.height;
+    var vw = video.videoWidth, vh = video.videoHeight;
+    var scale = Math.max(cw / vw, ch / vh);
+    var w = vw * scale, h = vh * scale;
+    ctx.drawImage(video, (cw - w) / 2, (ch - h) / 2, w, h);
+  }
+
+  function setCaptions(p){
+    captions.forEach(function(cap){
+      var from = parseFloat(cap.dataset.from), to = parseFloat(cap.dataset.to);
+      var fade = 0.05, o = 0, y = 26;
+      if (p >= from && p <= to){
+        var inO  = gsap.utils.clamp(0, 1, (p - from) / fade);
+        var outO = gsap.utils.clamp(0, 1, (to - p) / fade);
+        o = Math.min(inO, outO);
+        y = 26 * (1 - inO);
+      }
+      cap.style.opacity = o;
+      cap.style.transform = 'translateY(' + y + 'px)';
+    });
+    hint.style.opacity = p > 0.02 ? 0 : 1;
+    bar.style.width = (p * 100) + '%';
+  }
+
+  function tick(){
+    if (ready && video.duration){
+      var diff = target - current;
+      if (Math.abs(diff) > 0.0004){
+        current += diff * 0.14;
+        var t = current * video.duration;
+        if (Math.abs(video.currentTime - t) > 0.02){
+          try { video.currentTime = t; } catch(e){}
+        }
+      }
+      setCaptions(current);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  if ('requestVideoFrameCallback' in HTMLVideoElement.prototype){
+    var rvfc = function(){ draw(); video.requestVideoFrameCallback(rvfc); };
+    video.requestVideoFrameCallback(rvfc);
+  } else {
+    video.addEventListener('seeked', draw);
+  }
+
+  video.addEventListener('loadeddata', function(){
+    ready = true;
+    loader.style.opacity = 0;
+    setTimeout(function(){ loader.style.display = 'none'; }, 700);
+    fitCanvas();
+    try { video.currentTime = 0.01; } catch(e){}
+    draw();
+  });
+
+  ScrollTrigger.create({
+    trigger: '#filmWrap',
+    start: 'top top',
+    end: 'bottom bottom',
+    scrub: true,
+    onUpdate: function(self){ target = self.progress; }
+  });
+
+  window.addEventListener('resize', fitCanvas);
+  fitCanvas();
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
