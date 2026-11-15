@@ -15,6 +15,10 @@ function fixSettings() {
   if (!SETTINGS.messenger) SETTINGS.messenger = '61596225310656'; /* Xavelle Facebook Page */
 }
 fixSettings();
+function applyStoryStrip() {
+  const el = document.getElementById('storyStrip');
+  if (el) el.style.display = (SETTINGS.story && SETTINGS.story.on === false) ? 'none' : 'block';
+}
 let LANG = localStorage.getItem('aura_lang') || 'bn';
 let cart = loadLS('aura_cart', []);
 let wish = loadLS('aura_wish', []);
@@ -422,11 +426,12 @@ const t = (k, vars) => { let s = (I18N[k] && I18N[k][LANG]) || k; if (vars) for 
 /* ---------------- init ---------------- */
 async function init() {
   applyStaticI18n();
+  applyStoryStrip();
   if (!isConfigured()) { $('#demoNote').textContent = t('demoNote'); $('#demoNote').style.display = 'block'; }
   try {
     const [remoteProducts, remoteSettings] = await Promise.all([fetchProducts(), fetchSettings()]);
     if (remoteProducts) PRODUCTS = remoteProducts;
-    if (remoteSettings) { SETTINGS = { ...DEFAULT_SETTINGS, ...remoteSettings }; fixSettings(); applyStaticI18n(); }
+    if (remoteSettings) { SETTINGS = { ...DEFAULT_SETTINGS, ...remoteSettings }; fixSettings(); applyStaticI18n(); applyStoryStrip(); }
   } catch { /* seed fallback */ }
   renderPromoBar();
   renderFloatBtns();

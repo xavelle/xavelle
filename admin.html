@@ -375,6 +375,20 @@
           <button type="button" class="btn btn-outline btn-sm" id="bannerAdd">+ ব্যানার যোগ করুন</button>
           <input type="file" id="bannerFile" accept="image/*" hidden>
         </div>
+        <h3>গল্পের পেজ (Story) <span class="muted small">(স্ক্রল-অ্যানিমেশনের পেজ — story.html)</span></h3>
+        <div class="form-grid">
+          <label style="display:flex;align-items:center;gap:8px"><input id="sfStoryOn" type="checkbox" style="width:auto"> গল্পের পেজ চালু <span class="muted small">(বন্ধ করলে হোমপেজের লিংকও লুকিয়ে যাবে)</span></label>
+        </div>
+        <div class="form-grid">
+          <label>অধ্যায় ১ — শিরোনাম<input id="sfStoryCh1t"></label>
+          <label>অধ্যায় ১ — ছোট লেখা<input id="sfStoryCh1s"></label>
+          <label>অধ্যায় ২ — শিরোনাম<input id="sfStoryCh2t"></label>
+          <label>অধ্যায় ২ — ছোট লেখা<input id="sfStoryCh2s"></label>
+          <label>অধ্যায় ৩ — শিরোনাম<input id="sfStoryCh3t"></label>
+          <label>অধ্যায় ৩ — ছোট লেখা<input id="sfStoryCh3s"></label>
+        </div>
+        <p class="muted small" style="margin:6px 0 4px">গল্পের পেজে যেসব প্রোডাক্ট দেখাবে (টিক দিন):</p>
+        <div id="storyProdList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
         <div class="err" id="settingsErr"></div>
         <button class="btn" id="settingsSave">সেভ করুন</button>
       </div>
@@ -383,9 +397,9 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<script src="data.js?v=20261018"></script>
+<script src="data.js?v=20261115c"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="admin-import.js?v=20261015"></script>
-<script type="module" src="admin.js?v=20261018c"></script>
+<script type="module" src="admin.js?v=20261115c"></script>
 </body>
 </html>

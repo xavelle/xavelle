@@ -974,6 +974,25 @@ function renderSettings() {
   v('#sfFb', soc.facebook); v('#sfIg', soc.instagram); v('#sfYt', soc.youtube);
   v('#sfImgbb', settings.imgbbKey);
   renderBanners();
+  renderStorySettings();
+}
+
+/* ---------- story page controls ---------- */
+function renderStorySettings() {
+  const st = (settings && settings.story) || {};
+  $('#sfStoryOn').checked = st.on !== false;
+  const v = (id, val) => { $(id).value = val ?? ''; };
+  v('#sfStoryCh1t', st.ch1t); v('#sfStoryCh1s', st.ch1s);
+  v('#sfStoryCh2t', st.ch2t); v('#sfStoryCh2s', st.ch2s);
+  v('#sfStoryCh3t', st.ch3t); v('#sfStoryCh3s', st.ch3s);
+  const sel = new Set(st.productIds || []);
+  const all = products.length ? products : (typeof SEED_PRODUCTS !== 'undefined' ? SEED_PRODUCTS : []);
+  $('#storyProdList').innerHTML = all.map((p) => `
+    <label style="display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px">
+      <input type="checkbox" data-storyprod="${esc(p.id)}" ${sel.has(p.id) ? 'checked' : ''} style="width:auto">
+      <span>${esc(p.nameBn || p.nameEn || p.id)}</span>
+      <span class="muted small">${esc(p.nameEn || '')} — ৳${p.price ?? ''}</span>
+    </label>`).join('') || '<p class="muted">কোনো প্রোডাক্ট পাওয়া যায়নি।</p>';
 }
 
 /* ---------- hero banner manager ---------- */
@@ -1064,6 +1083,13 @@ async function saveSettingsForm() {
     },
     imgbbKey: $('#sfImgbb').value.trim(),
     heroBanners: (settings && settings.heroBanners) || [],
+    story: {
+      on: $('#sfStoryOn').checked,
+      ch1t: $('#sfStoryCh1t').value.trim(), ch1s: $('#sfStoryCh1s').value.trim(),
+      ch2t: $('#sfStoryCh2t').value.trim(), ch2s: $('#sfStoryCh2s').value.trim(),
+      ch3t: $('#sfStoryCh3t').value.trim(), ch3s: $('#sfStoryCh3s').value.trim(),
+      productIds: $$('#storyProdList [data-storyprod]:checked').map((c) => c.dataset.storyprod),
+    },
   };
   err.textContent = '';
   $('#settingsSave').disabled = true;

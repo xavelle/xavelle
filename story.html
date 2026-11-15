@@ -141,20 +141,20 @@
 
     <div class="caption" data-from="0.03" data-to="0.24">
       <div class="kicker">Chapter One</div>
-      <h2>হাতে বোনা ঐতিহ্য</h2>
-      <p>প্রতিটা শাড়ির পেছনে তাঁতির ঘণ্টার পর ঘণ্টা যত্ন</p>
+      <h2 id="cap1t">হাতে বোনা ঐতিহ্য</h2>
+      <p id="cap1s">প্রতিটা শাড়ির পেছনে তাঁতির ঘণ্টার পর ঘণ্টা যত্ন</p>
     </div>
 
     <div class="caption" data-from="0.32" data-to="0.52">
       <div class="kicker">Chapter Two</div>
-      <h2>প্রতিটা সুতোয় যত্ন</h2>
-      <p>খাঁটি কাপড়, নিখুঁত বুনন — কোনো তাড়াহুড়ো নেই</p>
+      <h2 id="cap2t">প্রতিটা সুতোয় যত্ন</h2>
+      <p id="cap2s">খাঁটি কাপড়, নিখুঁত বুনন — কোনো তাড়াহুড়ো নেই</p>
     </div>
 
     <div class="caption" data-from="0.58" data-to="0.78">
       <div class="kicker">Chapter Three</div>
-      <h2>ঐতিহ্য থেকে আপনার আলমারিতে</h2>
-      <p>তাঁতির হাতের কাজ, সরাসরি আপনার কাছে</p>
+      <h2 id="cap3t">ঐতিহ্য থেকে আপনার আলমারিতে</h2>
+      <p id="cap3s">তাঁতির হাতের কাজ, সরাসরি আপনার কাছে</p>
     </div>
 
     <div class="caption" data-from="0.84" data-to="1.01">
@@ -173,52 +173,15 @@
     <div class="kicker">The Collection</div>
     <h3>আমাদের বাছাই করা কালেকশন</h3>
   </div>
-  <div class="grid">
-    <article class="card">
-      <img src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop" alt="জামদানি শাড়ি" loading="lazy">
-      <div class="body">
-        <h4>জামদানি শাড়ি</h4>
-        <div class="en">Jamdani Saree</div>
-        <div class="price">৳৩,৪৯০</div>
-        <a class="btn" href="index.html">দোকানে দেখুন</a>
-      </div>
-    </article>
-    <article class="card">
-      <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Shivani%20rajput%20in%20salwar.jpg?width=800" alt="কটন কুর্তি" loading="lazy">
-      <div class="body">
-        <h4>কটন কুর্তি</h4>
-        <div class="en">Cotton Kurti</div>
-        <div class="price">৳১,২৫০</div>
-        <a class="btn" href="index.html">দোকানে দেখুন</a>
-      </div>
-    </article>
-    <article class="card">
-      <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=800&auto=format&fit=crop" alt="উইন্টার হুডি" loading="lazy">
-      <div class="body">
-        <h4>উইন্টার হুডি</h4>
-        <div class="en">Winter Hoodie</div>
-        <div class="price">৳১,৪৫০</div>
-        <a class="btn" href="index.html">দোকানে দেখুন</a>
-      </div>
-    </article>
-    <article class="card">
-      <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Perfume%20bottles%20displayed%20at%20a%20shop%20near%20Charminar%20in%20Hyderabad%2C%20India.jpg?width=800" alt="রয়্যাল উদ আতর" loading="lazy">
-      <div class="body">
-        <h4>রয়্যাল উদ আতর (১২মি.লি.)</h4>
-        <div class="en">Royal Oud Attar</div>
-        <div class="price">৳৮৫০</div>
-        <a class="btn" href="index.html">দোকানে দেখুন</a>
-      </div>
-    </article>
-  </div>
+  <div class="grid" id="storyGrid"><!-- প্রোডাক্ট কার্ড সেটিংস থেকে আসে --></div>
 </section>
 
 <footer>
   <div class="wordmark">XAVELLE</div>
   <div class="tagline">Always with Sunnah</div>
   <div class="cta-row">
-    <a class="cta-wa" href="https://wa.me/8801887099973" target="_blank" rel="noopener">WhatsApp-এ অর্ডার করুন</a>
-    <a class="cta-ms" href="https://m.me/61596225310656" target="_blank" rel="noopener">Messenger-এ মেসেজ করুন</a>
+    <a class="cta-wa" id="waBtn" href="https://wa.me/8801887099973" target="_blank" rel="noopener">WhatsApp-এ অর্ডার করুন</a>
+    <a class="cta-ms" id="msBtn" href="https://m.me/61596225310656" target="_blank" rel="noopener">Messenger-এ মেসেজ করুন</a>
   </div>
   <p class="credit">
     তাঁতের ভিডিও: Biswarup Ganguly, Wikimedia Commons —
@@ -229,10 +192,108 @@
   </p>
 </footer>
 
+<script>
+/* ===== Story settings (Firestore) — অ্যাডমিন প্যানেল থেকে নিয়ন্ত্রিত ===== */
+window.__storyGate = (function(){
+  var REST = 'https://firestore.googleapis.com/v1/projects/gen-lang-client-0710305331/databases/(default)/documents';
+  var IMG_FIX = {
+    p20: 'https://commons.wikimedia.org/wiki/Special:FilePath/Shivani%20rajput%20in%20salwar.jpg?width=800',
+    p11: 'https://commons.wikimedia.org/wiki/Special:FilePath/Perfume%20bottles%20displayed%20at%20a%20shop%20near%20Charminar%20in%20Hyderabad%2C%20India.jpg?width=800'
+  };
+  var FALLBACK_PRODUCTS = {
+    p19: { nameBn: 'জামদানি শাড়ি', nameEn: 'Jamdani Saree', price: 3490, img: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop' },
+    p20: { nameBn: 'কটন কুর্তি', nameEn: 'Cotton Kurti', price: 1250, img: IMG_FIX.p20 },
+    p16: { nameBn: 'উইন্টার হুডি', nameEn: 'Winter Hoodie', price: 1450, img: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=800&auto=format&fit=crop' },
+    p11: { nameBn: 'রয়্যাল উদ আতর (১২মি.লি.)', nameEn: 'Royal Oud Attar', price: 850, img: IMG_FIX.p11 }
+  };
+  var DEF = { on: true,
+    ch1t: 'হাতে বোনা ঐতিহ্য', ch1s: 'প্রতিটা শাড়ির পেছনে তাঁতির ঘণ্টার পর ঘণ্টা যত্ন',
+    ch2t: 'প্রতিটা সুতোয় যত্ন', ch2s: 'খাঁটি কাপড়, নিখুঁত বুনন — কোনো তাড়াহুড়ো নেই',
+    ch3t: 'ঐতিহ্য থেকে আপনার আলমারিতে', ch3s: 'তাঁতির হাতের কাজ, সরাসরি আপনার কাছে',
+    productIds: ['p19', 'p20', 'p16', 'p11'] };
+
+  function fv(f){
+    if (!f) return undefined;
+    if ('stringValue' in f) return f.stringValue;
+    if ('integerValue' in f) return Number(f.integerValue);
+    if ('doubleValue' in f) return f.doubleValue;
+    if ('booleanValue' in f) return f.booleanValue;
+    if ('arrayValue' in f) return (f.arrayValue.values || []).map(fv);
+    if ('mapValue' in f){ var o = {}, mf = f.mapValue.fields || {}; for (var k in mf) o[k] = fv(mf[k]); return o; }
+    return undefined;
+  }
+  function fields(doc){ var o = {}, fl = (doc && doc.fields) || {}; for (var k in fl) o[k] = fv(fl[k]); return o; }
+  function bnNum(n){ return String(n).replace(/[0-9]/g, function(d){ return '০১২৩৪৫৬৭৮৯'[+d]; }); }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  function showClosed(){
+    document.body.innerHTML = '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;background:#0d0a07;color:#f3ead8">'
+      + '<div style="font-family:\'Playfair Display\',serif;letter-spacing:.3em;font-size:26px">XAVELLE</div>'
+      + '<p>এই পেজটি এখন বন্ধ আছে।</p>'
+      + '<a href="index.html" style="background:#c9a24b;color:#171106;font-weight:700;padding:12px 26px;border-radius:999px;text-decoration:none">দোকানে যান →</a></div>';
+  }
+
+  function apply(story, products, settings){
+    if (story.on === false){ showClosed(); return true; }
+    var set = function(id, txt){ var el = document.getElementById(id); if (el && txt) el.textContent = txt; };
+    set('cap1t', story.ch1t); set('cap1s', story.ch1s);
+    set('cap2t', story.ch2t); set('cap2s', story.ch2s);
+    set('cap3t', story.ch3t); set('cap3s', story.ch3s);
+    var grid = document.getElementById('storyGrid');
+    if (grid){
+      grid.innerHTML = (story.productIds || []).map(function(id){
+        var p = products[id]; if (!p) return '';
+        var img = IMG_FIX[id] || p.img || '';
+        return '<article class="card"><img src="' + esc(img) + '" alt="' + esc(p.nameBn || p.nameEn || '') + '" loading="lazy">'
+          + '<div class="body"><h4>' + esc(p.nameBn || p.nameEn || '') + '</h4>'
+          + '<div class="en">' + esc(p.nameEn || '') + '</div>'
+          + '<div class="price">৳' + bnNum(p.price != null ? p.price : '') + '</div>'
+          + '<a class="btn" href="index.html">দোকানে দেখুন</a></div></article>';
+      }).join('');
+    }
+    if (settings){
+      var w = String(settings.whatsapp || '').replace(/[\s+]/g, '');
+      if (/^01\d{9}$/.test(w)) w = '88' + w;
+      var wa = document.getElementById('waBtn');
+      if (w && wa) wa.href = 'https://wa.me/' + w;
+      var m = String(settings.messenger || '');
+      var ms = document.getElementById('msBtn');
+      if (m && ms) ms.href = m.indexOf('http') === 0 ? m : 'https://m.me/' + m;
+    }
+    return false;
+  }
+
+  function load(){
+    return Promise.all([
+      fetch(REST + '/settings/main').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }),
+      fetch(REST + '/products?pageSize=50').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; })
+    ]).then(function(res){
+      var settings = res[0] ? fields(res[0]) : null;
+      var story = {};
+      var k; for (k in DEF) story[k] = DEF[k];
+      if (settings && settings.story) for (k in settings.story) story[k] = settings.story[k];
+      var products = {};
+      if (res[1] && res[1].documents){
+        res[1].documents.forEach(function(d){ var f = fields(d); if (f.id) products[f.id] = f; });
+      }
+      if (!Object.keys(products).length) products = FALLBACK_PRODUCTS;
+      return apply(story, products, settings);
+    }).catch(function(){
+      return apply(DEF, FALLBACK_PRODUCTS, null);
+    });
+  }
+
+  return Promise.race([
+    load(),
+    new Promise(function(res){ setTimeout(function(){ res(apply(DEF, FALLBACK_PRODUCTS, null)); }, 5000); })
+  ]);
+})();
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script>
-(function(){
+(window.__storyGate || Promise.resolve(false)).then(function(__off){
+  if (__off) return;
   gsap.registerPlugin(ScrollTrigger);
 
   var video   = document.getElementById('filmSrc');
@@ -346,7 +407,7 @@
   window.addEventListener('resize', fitCanvas);
   fitCanvas();
   requestAnimationFrame(tick);
-})();
+});
 </script>
 </body>
 </html>

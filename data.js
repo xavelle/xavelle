@@ -220,6 +220,13 @@ const DEFAULT_SETTINGS = {
   messenger: '61596225310656', /* Xavelle Facebook Page ID — m.me লিংকের জন্য */
   promoBar: { text: '', on: false }, /* উপরের প্রোমো বার */
   imgbbKey: '', /* free image upload API key (imgbb.com) */
+  story: { /* গল্পের পেজ (story.html) — অ্যাডমিন প্যানেল থেকে নিয়ন্ত্রণ */
+    on: true,
+    ch1t: 'হাতে বোনা ঐতিহ্য', ch1s: 'প্রতিটা শাড়ির পেছনে তাঁতির ঘণ্টার পর ঘণ্টা যত্ন',
+    ch2t: 'প্রতিটা সুতোয় যত্ন', ch2s: 'খাঁটি কাপড়, নিখুঁত বুনন — কোনো তাড়াহুড়ো নেই',
+    ch3t: 'ঐতিহ্য থেকে আপনার আলমারিতে', ch3s: 'তাঁতির হাতের কাজ, সরাসরি আপনার কাছে',
+    productIds: ['p19', 'p20', 'p16', 'p11'],
+  },
 };
 
 const FALLBACK_IMG = 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop';
