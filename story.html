@@ -223,7 +223,7 @@ window.__storyGate = (function(){
     return undefined;
   }
   function fields(doc){ var o = {}, fl = (doc && doc.fields) || {}; for (var k in fl) o[k] = fv(fl[k]); return o; }
-  function bnNum(n){ return String(n).replace(/[0-9]/g, function(d){ return '০১২৩৪৫৬৭৮৯'[+d]; }); }
+  function bnNum(n){ return Number(n).toLocaleString('en-IN').replace(/[0-9]/g, function(d){ return '০১২৩৪৫৬৭৮৯'[+d]; }); }
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
   function showClosed(){
