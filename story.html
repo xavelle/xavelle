@@ -38,7 +38,10 @@
   .stage{
     position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:#000;
   }
-  .stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1}
+  .stage video.bg{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;
+  }
   .stage::after{
     content:"";position:absolute;inset:0;pointer-events:none;
     background:
@@ -132,6 +135,7 @@
 <section class="film-wrap" id="filmWrap">
   <div class="stage" id="stage">
     <div class="progress" id="progress"></div>
+    <video id="filmSrc" class="bg" src="story-film.mp4" muted playsinline preload="auto"></video>
     <canvas id="film"></canvas>
     <div class="loader" id="loader">গল্প লোড হচ্ছে…</div>
 
@@ -180,7 +184,7 @@
       </div>
     </article>
     <article class="card">
-      <img src="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?q=80&w=800&auto=format&fit=crop" alt="কটন কুর্তি" loading="lazy">
+      <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Shivani%20rajput%20in%20salwar.jpg?width=800" alt="কটন কুর্তি" loading="lazy">
       <div class="body">
         <h4>কটন কুর্তি</h4>
         <div class="en">Cotton Kurti</div>
@@ -189,16 +193,16 @@
       </div>
     </article>
     <article class="card">
-      <img src="https://images.unsplash.com/photo-1610652492500-ded49ceeb378?q=80&w=800&auto=format&fit=crop" alt="লাক্সারি সিল্ক পাঞ্জাবি" loading="lazy">
+      <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=800&auto=format&fit=crop" alt="উইন্টার হুডি" loading="lazy">
       <div class="body">
-        <h4>লাক্সারি সিল্ক পাঞ্জাবি</h4>
-        <div class="en">Luxury Silk Panjabi</div>
-        <div class="price">৳২,৬১৮</div>
+        <h4>উইন্টার হুডি</h4>
+        <div class="en">Winter Hoodie</div>
+        <div class="price">৳১,৪৫০</div>
         <a class="btn" href="index.html">দোকানে দেখুন</a>
       </div>
     </article>
     <article class="card">
-      <img src="https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=800&auto=format&fit=crop" alt="রয়্যাল উদ আতর" loading="lazy">
+      <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Perfume%20bottles%20displayed%20at%20a%20shop%20near%20Charminar%20in%20Hyderabad%2C%20India.jpg?width=800" alt="রয়্যাল উদ আতর" loading="lazy">
       <div class="body">
         <h4>রয়্যাল উদ আতর (১২মি.লি.)</h4>
         <div class="en">Royal Oud Attar</div>
@@ -219,11 +223,11 @@
   <p class="credit">
     তাঁতের ভিডিও: Biswarup Ganguly, Wikimedia Commons —
     <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a> লাইসেন্সে ব্যবহৃত।<br>
+    ছবি: Shivani rajput ও Dev Jadiya, Wikimedia Commons —
+    <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>।<br>
     © Xavelle — সব অধিকার সংরক্ষিত।
   </p>
 </footer>
-
-<video id="filmSrc" src="story-film.mp4" muted playsinline preload="auto" style="display:none"></video>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
@@ -274,6 +278,7 @@
     bar.style.width = (p * 100) + '%';
   }
 
+  var lastDrawn = -1;
   function tick(){
     if (ready && video.duration){
       var diff = target - current;
@@ -284,8 +289,12 @@
           try { video.currentTime = t; } catch(e){}
         }
       }
-      setCaptions(current);
+      if (video.readyState >= 2 && Math.abs(video.currentTime - lastDrawn) > 0.004){
+        lastDrawn = video.currentTime;
+        draw();
+      }
     }
+    setCaptions(current);
     requestAnimationFrame(tick);
   }
 
@@ -296,14 +305,35 @@
     video.addEventListener('seeked', draw);
   }
 
-  video.addEventListener('loadeddata', function(){
-    ready = true;
+  function hideLoader(){
     loader.style.opacity = 0;
     setTimeout(function(){ loader.style.display = 'none'; }, 700);
+  }
+
+  video.addEventListener('loadeddata', function(){
+    ready = true;
+    hideLoader();
     fitCanvas();
     try { video.currentTime = 0.01; } catch(e){}
     draw();
   });
+
+  /* Prime the decoder: a muted play/pause forces frame decoding in
+     browsers that will not decode a paused, never-played video. */
+  video.addEventListener('canplay', function(){
+    if (ready) return;
+    var p = video.play();
+    if (p && p.then){
+      p.then(function(){
+        video.pause();
+        try { video.currentTime = 0.01; } catch(e){}
+      }).catch(function(){});
+    }
+  });
+
+  /* Failsafe: never leave the loader covering the page. */
+  setTimeout(function(){ if (!ready) hideLoader(); }, 9000);
+  try { video.load(); } catch(e){}
 
   ScrollTrigger.create({
     trigger: '#filmWrap',
