@@ -9,6 +9,12 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 let PRODUCTS = [...SEED_PRODUCTS];
 let SETTINGS = { ...DEFAULT_SETTINGS };
+function fixSettings() {
+  const w = (SETTINGS.whatsapp || '').replace(/[\s+]/g, '');
+  if (/^01\d{9}$/.test(w)) SETTINGS.whatsapp = '88' + w; /* wa.me needs international format */
+  if (!SETTINGS.messenger) SETTINGS.messenger = '61596225310656'; /* Xavelle Facebook Page */
+}
+fixSettings();
 let LANG = localStorage.getItem('aura_lang') || 'bn';
 let cart = loadLS('aura_cart', []);
 let wish = loadLS('aura_wish', []);
@@ -420,7 +426,7 @@ async function init() {
   try {
     const [remoteProducts, remoteSettings] = await Promise.all([fetchProducts(), fetchSettings()]);
     if (remoteProducts) PRODUCTS = remoteProducts;
-    if (remoteSettings) { SETTINGS = { ...DEFAULT_SETTINGS, ...remoteSettings }; applyStaticI18n(); }
+    if (remoteSettings) { SETTINGS = { ...DEFAULT_SETTINGS, ...remoteSettings }; fixSettings(); applyStaticI18n(); }
   } catch { /* seed fallback */ }
   renderPromoBar();
   renderFloatBtns();
