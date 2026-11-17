@@ -428,23 +428,26 @@ async function init() {
   applyStaticI18n();
   applyStoryStrip();
   if (!isConfigured()) { $('#demoNote').textContent = t('demoNote'); $('#demoNote').style.display = 'block'; }
-  try {
-    const [remoteProducts, remoteSettings] = await Promise.all([fetchProducts(), fetchSettings()]);
-    if (remoteProducts) PRODUCTS = remoteProducts;
-    if (remoteSettings) { SETTINGS = { ...DEFAULT_SETTINGS, ...remoteSettings }; fixSettings(); applyStaticI18n(); applyStoryStrip(); }
-  } catch { /* seed fallback */ }
+  /* দ্রুত প্রথম রেন্ডার: seed ডাটা দিয়েই পেজ আগে দেখাও — Firestore এলে নিচে আপডেট হবে */
   renderPromoBar();
   renderFloatBtns();
   buildNav();
   updateBadges();
-  /* পুরনো session থাকলে account cart restore */
-  try {
-    const su = loadLS('aura_user', null);
-    if (su && su.uid && isConfigured()) await switchToAccountCart(su.uid);
-  } catch { /* guest cart-ই থাকে */ }
   window.addEventListener('hashchange', route);
   route();
   startFlashTimer();
+  try {
+    const [remoteProducts, remoteSettings] = await Promise.all([fetchProducts(), fetchSettings()]);
+    if (remoteProducts) PRODUCTS = remoteProducts;
+    if (remoteSettings) { SETTINGS = { ...DEFAULT_SETTINGS, ...remoteSettings }; fixSettings(); applyStaticI18n(); applyStoryStrip(); renderPromoBar(); renderFloatBtns(); buildNav(); }
+    updateBadges();
+    route();
+  } catch { /* seed fallback */ }
+  /* পুরনো session থাকলে account cart restore */
+  try {
+    const su = loadLS('aura_user', null);
+    if (su && su.uid && isConfigured()) { await switchToAccountCart(su.uid); updateBadges(); if (location.hash === '#cart') route(); }
+  } catch { /* guest cart-ই থাকে */ }
   /* Live stock — অন্য কেউ অর্ডার করলে সবার screen-এ size/badge update */
   subscribeProducts((arr) => { PRODUCTS = arr; refreshStockUI(); });
   const si = $('#searchInput');
