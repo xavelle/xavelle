@@ -1,8 +1,8 @@
 /* XAVELLE — Phase 1: customer website (no admin panel).
    Hash router SPA. Cart + wishlist in localStorage. Orders → Firestore
    (or localStorage demo mode). All renders escape user-entered text. */
-import { isConfigured, fetchProducts, fetchSettings, saveOrder, fetchOrder, fetchReviews, submitReview, fetchCombos, sizeQty, totalStock, isOutOfStock, subscribeProducts, decrementStock } from './firebase.js?v=20261118a';
-import * as fb from './firebase.js?v=20261118a'; /* namespace: optional auth fns (signIn/signUp/resetPassword/fetchUserOrders) may not exist yet */
+import { isConfigured, fetchProducts, fetchSettings, saveOrder, fetchOrder, fetchReviews, submitReview, fetchCombos, sizeQty, totalStock, isOutOfStock, subscribeProducts, decrementStock } from './firebase.js?v=20261118b';
+import * as fb from './firebase.js?v=20261118b'; /* namespace: optional auth fns (signIn/signUp/resetPassword/fetchUserOrders) may not exist yet */
 
 /* ---------------- state ---------------- */
 const $ = (s, el = document) => el.querySelector(s);
@@ -118,7 +118,7 @@ const I18N = {
   shopCta: { bn: 'শপ করুন', en: 'Shop Now' },
   /* home */
   shopNow: { bn: 'এখনই শপ করুন', en: 'Shop Now' },
-  freeShipSub: { bn: '৳২০০০+ অর্ডারে সারা বাংলাদেশে ফ্রি ডেলিভারি', en: 'Free delivery all over Bangladesh on orders above ৳2000' },
+  freeShipSub: { bn: '৳{n}+ অর্ডারে সারা বাংলাদেশে ফ্রি ডেলিভারি', en: 'Free delivery all over Bangladesh on orders above ৳{n}' },
   nlT: { bn: 'নতুন অফার সবার আগে পান', en: 'Get new offers first' },
   nlPh: { bn: 'ইমেইল অথবা মোবাইল নম্বর', en: 'Email or mobile number' },
   subscribe: { bn: 'সাবস্ক্রাইব', en: 'Subscribe' },
@@ -167,12 +167,15 @@ const I18N = {
   skuNotFound: { bn: 'Not Found — এই কোডের কোনো প্রোডাক্ট নেই', en: 'Not Found — no product matches this code' },
   skuHint: { bn: 'কোডটি ঠিক আছে কিনা দেখুন (যেমন: A100001)', en: 'Check the code is correct (e.g. A100001)' },
   emptyShop: { bn: 'কোনো প্রোডাক্ট পাওয়া যায়নি', en: 'No products found' },
-  emptyShopHint: { bn: 'অন্য ক্যাটাগরি বা দাম দিয়ে চেষ্টা করুন।', en: 'Try another category or price.' },
+  emptyShopHint: { bn: 'অন্য নাম বা ক্যাটাগরি দিয়ে চেষ্টা করুন।', en: 'Try another name or category.' },
   /* product */
   prodNotFound: { bn: 'প্রোডাক্ট পাওয়া যায়নি', en: 'Product not found' },
   backToShop: { bn: 'Shop-এ ফিরে যান', en: 'Back to shop' },
   sizeSel: { bn: 'সাইজ নির্বাচন করুন:', en: 'Select size:' },
   sizeErr: { bn: 'সাইজ নির্বাচন করুন।', en: 'Please select a size.' },
+  errTerms: { bn: 'শর্তাবলীতে সম্মতি দিন (বাক্সে টিক দিন)।', en: 'Please agree to the terms & conditions.' },
+  stockLimited: { bn: 'স্টক সীমিত', en: 'Limited stock' },
+  removedToast: { bn: 'কার্ট থেকে সরানো হয়েছে', en: 'Removed from cart' },
   qty: { bn: 'পরিমাণ', en: 'Quantity' },
   wished: { bn: '♥ সংরক্ষিত', en: '♥ Saved' },
   addWish: { bn: '♡ উইশলিস্ট', en: '♡ Wishlist' },
@@ -305,7 +308,7 @@ const I18N = {
   revText: { bn: 'রিভিউ * (সর্বোচ্চ ৫০০ অক্ষর)', en: 'Review * (max 500 characters)' },
   revTextPh: { bn: 'পণ্যটি কেমন লেগেছে?', en: 'How did you like the product?' },
   revSubmit: { bn: 'রিভিউ জমা দিন', en: 'Submit Review' },
-  revErr1: { bn: 'নাম ও রিভিউ লিখুন।', en: 'Please enter your name and review.' },
+  revErr1: { bn: 'নাম, রেটিং ও রিভিউ — সবগুলো পূরণ করুন।', en: 'Please fill in your name, rating and review.' },
   revErr2: { bn: 'রেটিং দিন।', en: 'Please give a rating.' },
   revErr3: { bn: 'আপনি আজ এই প্রোডাক্টে ইতিমধ্যে রিভিউ দিয়েছেন।', en: 'You have already reviewed this product today.' },
   revErr4: { bn: 'রিভিউ জমা দেওয়া যায়নি। আবার চেষ্টা করুন।', en: "Couldn't submit the review. Try again." },
@@ -348,7 +351,7 @@ const I18N = {
   rtRefundH: { bn: 'রিফান্ড', en: 'Refund' },
   rtRefundP: { bn: 'রিটার্ন পণ্য আমাদের গুদামে পৌঁছানোর ৭–১৫ কর্মদিবসের মধ্যে রিফান্ড প্রক্রিয়া সম্পন্ন হবে (বিকাশ/নগদ/ব্যাংক)। COD অর্ডারে রিফান্ড বিকাশ/নগদে দেওয়া হয়।', en: 'Refunds are processed within 7–15 working days of the returned product reaching our warehouse (bKash/Nagad/bank). COD orders are refunded via bKash/Nagad.' },
   rtContactH: { bn: 'যোগাযোগ', en: 'Contact' },
-  rtContactP: { bn: 'রিটার্নের জন্য হটলাইন {p}-এ কল করুন বা Contact পেজে মেসেজ দিন।', en: 'For returns, call our hotline {p} or message us on the Contact page.' },
+  rtContactP: { bn: 'রিটার্নের জন্য হটলাইন {p}-এ কল করুন বা <a href="#contact">যোগাযোগ পেজে</a> মেসেজ দিন।', en: 'For returns, call our hotline {p} or message us on the <a href="#contact">Contact page</a>.' },
   /* privacy */
   prT: { bn: 'প্রাইভেসি পলিসি', en: 'Privacy Policy' },
   prDate: { bn: 'কার্যকর তারিখ:', en: 'Effective date:' },
@@ -378,7 +381,7 @@ const I18N = {
   tmP6: { bn: 'এই শর্তাবলী যেকোনো সময় পরিবর্তন হতে পারে; আপডেট এই পেজে প্রকাশ করা হবে।', en: 'These terms may change at any time; updates will be published on this page.' },
   /* about */
   abT: { bn: 'XAVELLE সম্পর্কে', en: 'About XAVELLE' },
-  abP1: { bn: 'XAVELLE বাংলাদেশের একটি ইসলামিক লাইফস্টাইল ফ্যাশন ব্র্যান্ড। সুন্নাহ অনুসরণে পরিমার্জিত পোশাক, আতর ও লাইফস্টাইল পণ্য আমরা সেরা দামে পৌঁছে দিই।', en: 'XAVELLE is an Islamic lifestyle fashion brand of Bangladesh. We deliver refined clothing, attar and lifestyle products inspired by the Sunnah at the best prices.' },
+  abP1: { bn: 'XAVELLE বাংলাদেশের একটি ইসলামিক লাইফস্টাইল ফ্যাশন ব্র্যান্ড। সুন্নাহ অনুসরণে পরিমার্জিত মেয়েদের পোশাক — জামদানি শাড়ি, কুর্তি, থ্রি-পিস ও হিজাব আমরা সেরা দামে পৌঁছে দিই।', en: 'XAVELLE is an Islamic lifestyle fashion brand of Bangladesh. We deliver refined clothing for women, inspired by the Sunnah — Jamdani sarees, kurtis, three-pieces and hijabs — at the best prices.' },
   abH2: { bn: 'আমাদের প্রতিশ্রুতি', en: 'Our promise' },
   abL1: { bn: 'যাচাই করা মানসম্মত পণ্য', en: 'Verified quality products' },
   abL2: { bn: 'স্বচ্ছ মূল্য — লুকানো চার্জ নেই', en: 'Transparent pricing — no hidden charges' },
@@ -648,7 +651,7 @@ function route() {
 
 /* re-bind events after each render */
 function bindDynamic() {
-  $$('[data-add]').forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); addToCart(b.dataset.add, 1, null); }));
+  $$('[data-add]').forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); const p = prodById(b.dataset.add); if (!p) return; const sz = (p.sizes || []).filter((s) => sizeQty(p, s) > 0); if (sz.length === 1) addToCart(p.id, 1, sz[0]); else if (sz.length > 1) location.hash = '#product/' + p.id; else addToCart(p.id, 1, null); }));
   $$('[data-wish]').forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); toggleWish(b.dataset.wish); }));
   $$('.faq-q').forEach((q) => {
     q.addEventListener('click', () => {
@@ -665,8 +668,9 @@ function prodCard(p) {
   const name = LANG === 'bn' ? p.nameBn : p.nameEn;
   const wished = wish.includes(p.id);
   const oos = isOutOfStock(p);
-  const stockCls = oos ? 'low' : 'ok';
-  const stockTxt = oos ? t('outStock') : t('inStock');
+  const lowStk = !oos && totalStock(p) <= 5;
+  const stockCls = (oos || lowStk) ? 'low' : 'ok';
+  const stockTxt = oos ? t('outStock') : (lowStk ? t('stockLimited') : t('inStock'));
   return `<article class="prod-card" data-pid="${esc(p.id)}">
     <div class="p-img"><a href="#product/${esc(p.id)}"><img src="${esc(p.img)}" alt="${esc(name)}" onerror="this.src='${FALLBACK_IMG}'" loading="lazy"></a>
     ${off > 0 ? `<span class="badge-off">-${off}%</span>` : ''}
@@ -692,7 +696,7 @@ function viewHome() {
   const mains = visibleMains();
   const banners = (SETTINGS.heroBanners || []).filter((b) => b && b.img);
   const heroSlides = banners.length
-    ? banners.map((b) => `<div class="hc-slide"><img src="${esc(b.img)}" alt="${esc(b.title || 'XAVELLE')}" loading="lazy"><div class="hero-cta">${b.title ? `<h2 class="hero-title">${esc(b.title)}</h2>` : ''}<a class="btn" href="${esc(b.link || '#shop')}">${t('shopNow')}</a></div></div>`).join('')
+    ? banners.map((b) => `<div class="hc-slide"><img src="${esc(b.img)}" alt="${esc(b.title || 'XAVELLE')}" loading="eager" fetchpriority="high"><div class="hero-cta">${b.title ? `<h2 class="hero-title">${esc(b.title)}</h2>` : ''}<a class="btn" href="${esc(b.link || '#shop')}">${t('shopNow')}</a></div></div>`).join('')
     : `<div class="hc-slide"><img src="cover.jpg?v=20261018c" alt="XAVELLE"><div class="hero-cta"><a class="btn" href="#shop">${t('shopNow')}</a></div></div>
       <div class="hc-slide hc-promo"><div class="hc-promo-txt"><h2>${t('flashPromoT')}</h2><p>${t('flashPromoS')}</p><a class="btn" href="#shop">${t('viewOffer')}</a></div></div>`;
   const nSlides = banners.length || 2;
@@ -701,9 +705,9 @@ function viewHome() {
     <div class="hc-track" id="hcTrack">
       ${heroSlides}
     </div>
-    <button class="hc-arrow hc-prev" id="hcPrev" aria-label="previous">‹</button>
+    ${nSlides > 1 ? `<button class="hc-arrow hc-prev" id="hcPrev" aria-label="previous">‹</button>
     <button class="hc-arrow hc-next" id="hcNext" aria-label="next">›</button>
-    <div class="hc-dots" id="hcDots">${Array.from({ length: nSlides }, (_, i) => `<button class="${i === 0 ? 'on' : ''}" data-i="${i}" aria-label="slide ${i + 1}"></button>`).join('')}</div>
+    <div class="hc-dots" id="hcDots">${Array.from({ length: nSlides }, (_, i) => `<button class="${i === 0 ? 'on' : ''}" data-i="${i}" aria-label="slide ${i + 1}"></button>`).join('')}</div>` : ''}
   </div>
 
   <section class="section"><div class="section-head"><h2>${t('categories')}</h2><a href="#shop">${t('viewAll')} →</a></div>
@@ -727,7 +731,7 @@ function viewHome() {
     <div class="trust-item"><span class="trust-ic">✓</span><span>${t('trust4')}</span></div>
   </div>
 
-  <div class="promo-strip"><div><b>${t('freeShip')}</b><span>${t('freeShipSub')}</span></div><a class="btn" href="#shop">${t('shopCta')}</a></div>
+  <div class="promo-strip"><div><b>${t('freeShip')}</b><span>${t('freeShipSub', { n: (SETTINGS.freeAbove || 2500).toLocaleString(LANG === 'bn' ? 'bn-BD' : 'en-US') })}</span></div><a class="btn" href="#shop">${t('shopCta')}</a></div>
 
   <section class="section"><div class="section-head"><h2>${t('testi')}</h2></div>
   <div class="testi-grid" id="homeTesti">${SEED_TESTIMONIALS.slice(0, 3).map((x) => `<div class="testi"><div class="stars">${stars(x.rating)}</div><p>"${esc(x.text)}"</p><b>${esc(x.name)}</b><span>${esc(x.loc)}</span></div>`).join('')}</div></section>
@@ -882,10 +886,11 @@ function viewProduct(id) {
         return parts.length ? `<div class="meta-box"><div>📏 <b>${t('fabricMeasure')}</b> — ${parts.join(' · ')}</div></div>` : ''; })()}
       ${(() => {
         const oos = isOutOfStock(p);
-        const stockHtml = `<div class="stock ${oos ? 'low' : 'ok'}" id="pdStock">${oos ? t('outStock') : t('inStock')}</div>`;
+        const lowStk = !oos && totalStock(p) <= 5;
+        const stockHtml = `<div class="stock ${(oos || lowStk) ? 'low' : 'ok'}" id="pdStock">${oos ? t('outStock') : (lowStk ? t('stockLimited') : t('inStock'))}</div>`;
         const sizes = p.sizes || [];
         const naSizes = sizes.filter((s) => sizeQty(p, s) <= 0);
-        const showGuide = ['men', 'women', 'kids'].includes(p.main);
+        const showGuide = sizes.some((s) => ['S', 'M', 'L', 'XL', 'XXL'].includes(s));
         const sizeHtml = sizes.length
           ? `<div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center"><b>${t('sizeSel')}</b>${showGuide ? `<button class="btn btn-outline btn-sm" id="sizeGuideBtn">📏 ${t('sizeGuide')}</button>` : ''}</div>
       <div class="size-row" id="sizeRow">${sizes.map((s) => {
@@ -942,7 +947,7 @@ function refreshStockUI() {
     if (!p) return;
     const oos = isOutOfStock(p);
     const badge = card.querySelector('.stock');
-    if (badge) { badge.className = 'stock ' + (oos ? 'low' : 'ok'); badge.textContent = oos ? t('outStock') : t('inStock'); }
+    if (badge) { const lw = !oos && totalStock(p) <= 5; badge.className = 'stock ' + ((oos || lw) ? 'low' : 'ok'); badge.textContent = oos ? t('outStock') : (lw ? t('stockLimited') : t('inStock')); }
     const btn = card.querySelector('[data-add]');
     if (btn) { btn.disabled = oos; btn.style.opacity = oos ? '.5' : ''; }
   });
@@ -966,7 +971,7 @@ function refreshStockUI() {
       else { naEl = document.createElement('div'); naEl.id = 'sizeNA'; naEl.className = 'muted'; naEl.style.cssText = 'font-size:13px; margin-top:6px'; naEl.innerHTML = html; row.after(naEl); }
     } else if (naEl) naEl.remove();
     const badge = document.getElementById('pdStock');
-    if (badge) { const oos = isOutOfStock(p); badge.className = 'stock ' + (oos ? 'low' : 'ok'); badge.textContent = oos ? t('outStock') : t('inStock'); }
+    if (badge) { const oos = isOutOfStock(p); const lw = !oos && totalStock(p) <= 5; badge.className = 'stock ' + ((oos || lw) ? 'low' : 'ok'); badge.textContent = oos ? t('outStock') : (lw ? t('stockLimited') : t('inStock')); }
   }
 }
 
@@ -996,7 +1001,7 @@ function setQty(id, size, delta) {
   const it = cart.find((i) => i.id === id && i.size === size);
   if (!it) return;
   it.qty += delta;
-  if (it.qty <= 0) cart = cart.filter((i) => i !== it);
+  if (it.qty <= 0) { cart = cart.filter((i) => i !== it); toast(t('removedToast')); }
   persistCart();
   updateBadges(); route();
 }
@@ -1026,7 +1031,7 @@ function viewCart() {
     <div class="tot-row"><span>${t('delivery')}</span><b>${t('delAtCheckout')}</b></div>
     <p style="font-size:12.5px; color:var(--muted); margin:2px 0 6px">${deliveryMetaLine()}</p>
     <div class="tot-row grand"><span>${t('total')}</span><b>${fmt(total)}</b></div>
-    <a class="btn btn-block" href="#checkout" style="margin-top:12px" ${!cart.length ? 'onclick="return false" style="opacity:.5"' : ''}>${t('checkoutBtn')}</a>
+    ${cart.length ? `<a class="btn btn-block" href="#checkout" style="margin-top:12px">${t('checkoutBtn')}</a>` : ''}
     <a class="btn btn-outline btn-block" href="#shop" style="margin-top:8px">${t('continueShop')}</a>
   </div></div></section>`;
 }
@@ -1137,7 +1142,7 @@ function viewCheckout() {
   const mBk = LANG === 'bn' ? 'বিকাশ' : 'bKash';
   const mNg = LANG === 'bn' ? 'নগদ' : 'Nagad';
   return `<section class="section"><h2 style="color:var(--navy)">${t('coT')}</h2>
-  <form id="coForm" class="cart-layout" style="margin-top:16px"><div>
+  <form id="coForm" class="cart-layout" style="margin-top:16px" novalidate><div>
     <div class="card"><h3>${t('billing')}</h3>
       <div class="field"><label>${t('fName')}</label><input id="coName" required placeholder="${t('fNamePh')}"></div>
       <div class="field"><label>${t('fPhone')}</label><input id="coPhone" required placeholder="01XXXXXXXXX" inputmode="numeric"><div class="hint">${t('fPhoneHint')}</div></div>
@@ -1208,17 +1213,19 @@ async function placeOrder(e) {
   const note = $('#coNote').value.trim();
   const pay = (document.querySelector('input[name="pay"]:checked') || {}).value || 'cod';
   const err = $('#coErr');
-  if (!name) { err.textContent = t('errName'); return; }
-  if (!validPhone(phone)) { err.textContent = t('errPhone'); return; }
-  if (!district) { err.textContent = t('errDistrict'); return; }
-  if (!address) { err.textContent = t('errAddr'); return; }
+  const fail = (msg, sel) => { err.textContent = msg; err.scrollIntoView({ behavior: 'smooth', block: 'center' }); const f = sel && $(sel); if (f) setTimeout(() => { try { f.focus({ preventScroll: true }); } catch {} }, 350); };
+  if (!name) { fail(t('errName'), '#coName'); return; }
+  if (!validPhone(phone)) { fail(t('errPhone'), '#coPhone'); return; }
+  if (!district) { fail(t('errDistrict'), '#coDistrict'); return; }
+  if (!address) { fail(t('errAddr'), '#coAddress'); return; }
+  if (!$('#coTerms').checked) { fail(t('errTerms'), '#coTerms'); return; }
   let trxId = '', senderNumber = '';
   if (pay === 'bkash' || pay === 'nagad') {
     trxId = $(pay === 'bkash' ? '#trxBkash' : '#trxNagad').value.trim();
     senderNumber = $(pay === 'bkash' ? '#senderBkash' : '#senderNagad').value.trim();
-    if (!trxId) { err.textContent = t('errTrx'); return; }
-    if (!senderNumber) { err.textContent = t('errSender'); return; }
-    if (!validPhone(senderNumber)) { err.textContent = t('errSenderBad'); return; }
+    if (!trxId) { fail(t('errTrx'), pay === 'bkash' ? '#trxBkash' : '#trxNagad'); return; }
+    if (!senderNumber) { fail(t('errSender'), pay === 'bkash' ? '#senderBkash' : '#senderNagad'); return; }
+    if (!validPhone(senderNumber)) { fail(t('errSenderBad'), pay === 'bkash' ? '#senderBkash' : '#senderNagad'); return; }
   }
   err.textContent = '';
   btn.disabled = true;
@@ -1268,6 +1275,7 @@ async function placeOrder(e) {
     cart = [];
     persistCart();
     updateBadges();
+    try { localStorage.removeItem('aura_co_form'); } catch {}
     saveLS('aura_last_order', order);
     location.hash = '#order-success/' + orderId;
   } catch (ex) {
@@ -1554,7 +1562,7 @@ bindDynamic = function () {
   if (hc) {
     const track = $('#hcTrack');
     const dots = $$('#hcDots button');
-    const n = dots.length || 2;
+    const n = track && track.children.length ? track.children.length : (dots.length || 1);
     let cur = 0, timer = null;
     const go = (i) => {
       cur = ((i % n) + n) % n;
@@ -1563,14 +1571,19 @@ bindDynamic = function () {
     };
     const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
     const start = () => { stop(); timer = setInterval(() => { if (!document.contains(hc)) { stop(); return; } go(cur + 1); }, 5000); };
-    $('#hcPrev').addEventListener('click', () => { go(cur - 1); start(); });
-    $('#hcNext').addEventListener('click', () => { go(cur + 1); start(); });
+    const hpB = $('#hcPrev'), hnB = $('#hcNext');
+    if (hpB) hpB.addEventListener('click', () => { go(cur - 1); start(); });
+    if (hnB) hnB.addEventListener('click', () => { go(cur + 1); start(); });
     dots.forEach((d) => d.addEventListener('click', () => { go(parseInt(d.dataset.i, 10)); start(); }));
     start();
   }
   /* shop filters */
   const fQ = $('#fQ');
   if (fQ) fQ.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const u = new URLSearchParams(location.hash.split('?')[1] || ''); const v = fQ.value.trim(); if (v) u.set('q', v); else u.delete('q'); u.delete('page'); location.hash = '#shop?' + u.toString(); } });
+  if (fQ) {
+    try { if (sessionStorage.getItem('xvFQ')) { sessionStorage.removeItem('xvFQ'); fQ.focus(); const n = fQ.value.length; try { fQ.setSelectionRange(n, n); } catch {} } } catch {}
+    fQ.addEventListener('input', () => { clearTimeout(fQ._dt); fQ._dt = setTimeout(() => { const u = new URLSearchParams(location.hash.split('?')[1] || ''); const v = fQ.value.trim(); if (v) u.set('q', v); else u.delete('q'); u.delete('page'); const h = '#shop?' + u.toString(); if (location.hash !== h) { try { sessionStorage.setItem('xvFQ', '1'); } catch {} location.hash = h; } }, 450); });
+  }
   /* product detail */
   const pd = $('#sizeRow');
   const sg = $('#sizeGuideBtn'); if (sg) sg.onclick = openSizeGuide;
@@ -1578,6 +1591,8 @@ bindDynamic = function () {
     let selSize = null, qty = 1;
     const pid = location.hash.split('/')[1];
     $$('#sizeRow .size-btn').forEach((b) => b.addEventListener('click', () => { selSize = b.dataset.size; $$('#sizeRow .size-btn').forEach((x) => x.classList.toggle('on', x === b)); $('#sizeErr').textContent = ''; }));
+    const availSz = $$('#sizeRow .size-btn:not([disabled])');
+    if (availSz.length === 1) availSz[0].click(); /* একটাই সাইজ থাকলে নিজে থেকে বাছাই */
     const pdMain = $('#pdMain');
     if (pdMain) { pdMain.style.cursor = 'zoom-in'; pdMain.title = t('zoomHint'); pdMain.addEventListener('click', () => openLightbox(pdMain.src)); }
     $$('.pd-thumb').forEach((th) => th.addEventListener('click', () => {
@@ -1588,8 +1603,8 @@ bindDynamic = function () {
     const qMinus = $('#qMinus'), qPlus = $('#qPlus'), pdAdd = $('#pdAdd'), pdBuy = $('#pdBuy');
     if (qMinus) qMinus.addEventListener('click', () => { qty = Math.max(1, qty - 1); $('#qVal').textContent = qty; });
     if (qPlus) qPlus.addEventListener('click', () => { qty = Math.min(99, qty + 1); $('#qVal').textContent = qty; });
-    if (pdAdd) pdAdd.addEventListener('click', () => { if (!selSize && prodById(pid)?.sizes?.length) { $('#sizeErr').textContent = t('sizeErr'); return; } addToCart(pid, qty, selSize); });
-    if (pdBuy) pdBuy.addEventListener('click', () => { if (!selSize && prodById(pid)?.sizes?.length) { $('#sizeErr').textContent = t('sizeErr'); return; } addToCart(pid, qty, selSize); location.hash = '#checkout'; });
+    if (pdAdd) pdAdd.addEventListener('click', () => { if (!selSize && prodById(pid)?.sizes?.length) { $('#sizeErr').textContent = t('sizeErr'); toast(t('sizeErr')); const sr = $('#sizeRow'); if (sr) sr.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; } addToCart(pid, qty, selSize); });
+    if (pdBuy) pdBuy.addEventListener('click', () => { if (!selSize && prodById(pid)?.sizes?.length) { $('#sizeErr').textContent = t('sizeErr'); toast(t('sizeErr')); const sr = $('#sizeRow'); if (sr) sr.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; } addToCart(pid, qty, selSize); location.hash = '#checkout'; });
     $('#pdWish').addEventListener('click', () => toggleWish(pid));
     $('#shareCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(location.href); toast(t('linkCopied')); } catch { toast(t('linkCopyFail')); } });
     loadReviews(pid);
@@ -1621,6 +1636,15 @@ bindDynamic = function () {
     });
     const cpnBtn = $('#cpnApply');
     if (cpnBtn) cpnBtn.addEventListener('click', applyCoupon);
+    /* চেকআউট ফরমের তথ্য মনে রাখা — মাঝপথে পেজ ছাড়লেও আবার লিখতে হবে না */
+    try {
+      const COF = [['coName', 'name'], ['coPhone', 'phone'], ['coDistrict', 'district'], ['coAddress', 'address'], ['coEmail', 'email'], ['coWhats', 'whats'], ['coNote', 'note']];
+      const saveCoForm = () => { const o = {}; COF.forEach(([id, k]) => { const el = document.getElementById(id); if (el) o[k] = el.value; }); try { localStorage.setItem('aura_co_form', JSON.stringify(o)); } catch {} };
+      const savedCo = JSON.parse(localStorage.getItem('aura_co_form') || 'null');
+      if (savedCo) { COF.forEach(([id, k]) => { const el = document.getElementById(id); if (el && savedCo[k]) el.value = savedCo[k]; }); if (savedCo.district) $('#coDistrict').dispatchEvent(new Event('change')); }
+      co.addEventListener('input', saveCoForm);
+      co.addEventListener('change', saveCoForm);
+    } catch {}
   }
   /* track */
   const tr = $('#trBtn');
@@ -1639,18 +1663,19 @@ bindDynamic = function () {
   const liBtn = $('#siLoginBtn');
   if (liBtn) liBtn.addEventListener('click', () => {
     const em = $('#siEmail').value.trim(), pw = $('#siPw').value;
-    if (!/^\S+@\S+\.\S+$/.test(em)) { $('#siErr').textContent = t('siErrEmail'); return; }
-    if (pw.length < 8) { $('#siErr').textContent = t('siErrPw'); return; }
-    $('#siErr').textContent = '';
+    if (!/^\S+@\S+\.\S+$/.test(em)) { $('#siErr').textContent = t('siErrEmail'); $('#siPwErr').textContent = ''; return; }
+    if (pw.length < 8) { $('#siPwErr').textContent = t('siErrPw'); $('#siErr').textContent = ''; return; }
+    $('#siErr').textContent = ''; $('#siPwErr').textContent = '';
     doLogin(em, pw);
   });
   const suBtn = $('#siSignupBtn');
   if (suBtn) suBtn.addEventListener('click', () => {
     const nm = $('#siName').value.trim(), em = $('#suEmail').value.trim(), pw = $('#suPw').value;
-    if (!nm) { $('#suErr').textContent = t('siErrName'); return; }
-    if (!/^\S+@\S+\.\S+$/.test(em)) { $('#suErr').textContent = t('siErrEmail'); return; }
-    if (pw.length < 8) { $('#suErr').textContent = t('siErrPw'); return; }
-    $('#suErr').textContent = '';
+    const suClear = () => { ['suNameErr', 'suEmailErr', 'suPwErr', 'suErr'].forEach((i) => { const e2 = document.getElementById(i); if (e2) e2.textContent = ''; }); };
+    if (!nm) { suClear(); $('#suNameErr').textContent = t('siErrName'); return; }
+    if (!/^\S+@\S+\.\S+$/.test(em)) { suClear(); $('#suEmailErr').textContent = t('siErrEmail'); return; }
+    if (pw.length < 8) { suClear(); $('#suPwErr').textContent = t('siErrPw'); return; }
+    suClear();
     doSignup(nm, em, pw);
   });
   const fgLink = $('#siForgotLink');
@@ -1769,6 +1794,8 @@ function applyStaticI18n() {
   set('fBottom', t('fBottom'));
   const lb = $('#langBtn');
   if (lb) { lb.textContent = LANG === 'bn' ? 'EN' : 'বাং'; lb.title = LANG === 'bn' ? 'Switch to English' : 'বাংলায় দেখুন'; }
+  const ssEl = $('#storyStrip');
+  if (ssEl) ssEl.innerHTML = LANG === 'bn' ? '✦ স্ক্রলে দেখুন — <b>হাতে বোনা ঐতিহ্যের গল্প</b> →' : '✦ Scroll to watch — <b>the story of handwoven heritage</b> →';
   syncDrawerLang();
   const mb = $('#menuBtn');
   if (mb) mb.setAttribute('aria-label', t('drawerMenu'));
@@ -1821,8 +1848,9 @@ function viewSignin() {
     <div class="si-tabs"><button class="chip on" id="tabLogin" type="button">${t('siLogin')}</button><button class="chip" id="tabSignup" type="button">${t('siSignup')}</button></div>
     <div id="siLoginBox">
       <div class="field"><label>${t('siEmail')}</label><input id="siEmail" type="email" placeholder="you@example.com" autocomplete="email"></div>
-      <div class="field"><label>${t('siPw')}</label><input id="siPw" type="password" placeholder="••••••••" autocomplete="current-password"></div>
       <div class="err" id="siErr"></div>
+      <div class="field"><label>${t('siPw')}</label><input id="siPw" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+      <div class="err" id="siPwErr"></div>
       <button class="btn btn-block" id="siLoginBtn" type="button">${t('siLoginBtn')}</button>
       <p style="text-align:center; margin-top:12px"><a href="#" id="siForgotLink" style="color:var(--gold); font-weight:700">${t('siForgot')}</a></p>
       <div id="siForgotBox" style="display:none; margin-top:10px">
@@ -1832,8 +1860,11 @@ function viewSignin() {
     </div>
     <div id="siSignupBox" style="display:none">
       <div class="field"><label>${t('siName')}</label><input id="siName" placeholder="${t('siName')}" autocomplete="name"></div>
+      <div class="err" id="suNameErr"></div>
       <div class="field"><label>${t('siEmail')}</label><input id="suEmail" type="email" placeholder="you@example.com" autocomplete="email"></div>
+      <div class="err" id="suEmailErr"></div>
       <div class="field"><label>${t('siPw')}</label><input id="suPw" type="password" placeholder="••••••••" autocomplete="new-password"></div>
+      <div class="err" id="suPwErr"></div>
       <div class="err" id="suErr"></div>
       <button class="btn btn-block" id="siSignupBtn" type="button">${t('siSignupBtn')}</button>
     </div>
