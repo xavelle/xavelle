@@ -251,6 +251,21 @@ export async function saveSettings(s) {
 
 /* ================= ORDERS ================= */
 
+/* ফোন নম্বরের SHA-256 hash — public mirror-এ আসল নম্বর রাখা হয় না;
+   কাস্টমার শুধু মোবাইল নম্বর দিলে hash মিলিয়ে তার অর্ডার খোঁজা যায়। */
+export function normalizePhone(p) { return String(p || '').replace(/[\s-]/g, '').replace(/^\+?88/, ''); }
+export async function phoneHashOf(p) {
+  const s = normalizePhone(p);
+  try {
+    if (crypto && crypto.subtle) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('xv:' + s));
+      return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+    }
+  } catch { /* fall through */ }
+  let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; }
+  return 'fnv' + (h >>> 0).toString(16);
+}
+
 /* Contract (storefront নির্ভর করে): সফল হলে Firestore doc id, ডেমো/ব্যর্থতায় null */
 export async function saveOrder(order) {
   const f = await fb();
@@ -259,13 +274,24 @@ export async function saveOrder(order) {
     const ref = await f.fFns.addDoc(f.fFns.collection(f.db, C.orders), {
       ...order, createdAt: f.fFns.serverTimestamp(),
     });
-    /* Public status mirror — guest tracking (orderId দিয়ে) এর জন্য।
-       Customer data নেই, শুধু orderId + status + updatedAt। */
+    /* Public status mirror — guest tracking-এর জন্য।
+       নাম/ঠিকানা/আসল ফোন নম্বর নেই; আছে orderId + status + পণ্য/টাকার
+       বিবরণ + phoneHash (শুধু মোবাইল দিয়ে অর্ডার খোঁজার জন্য)। */
     try {
       if (order && order.orderId) {
         await f.fFns.setDoc(f.fFns.doc(f.db, C.orderStatus, String(order.orderId)), {
           orderId: String(order.orderId),
           status: order.stage || 'pending',
+          paid: !!order.paid,
+          pay: order.pay || '',
+          items: (order.items || []).map((i) => ({ name: i.name || i.id || '', qty: i.qty || 1, size: i.size || '', price: i.price || 0 })),
+          subtotal: order.subtotal || 0,
+          discount: order.discount || 0,
+          delivery: order.delivery || 0,
+          total: order.total || 0,
+          district: order.district || '',
+          createdAtISO: order.createdAt || new Date().toISOString(),
+          phoneHash: await phoneHashOf(order.phone),
           updatedAt: f.fFns.serverTimestamp(),
         });
       }
@@ -323,6 +349,22 @@ export async function fetchOrderStatus(orderId) {
     const snap = await f.fFns.getDoc(f.fFns.doc(f.db, C.orderStatus, String(orderId)));
     return snap.exists() ? { id: snap.id, ...snap.data() } : null;
   } catch (e) { console.warn('[XAVELLE] fetchOrderStatus failed:', e); return null; }
+}
+
+/* Guest tracking: শুধু মোবাইল নম্বর দিয়ে ওই নম্বরের সব অর্ডার (mirror থেকে)।
+   আসল নম্বর কোথাও যায় না — hash মিলিয়ে query হয়। */
+export async function fetchOrdersByPhone(phone) {
+  try {
+    const f = await fb();
+    if (!f) return [];
+    const h = await phoneHashOf(phone);
+    const q = f.fFns.query(f.fFns.collection(f.db, C.orderStatus), f.fFns.where('phoneHash', '==', h));
+    const snap = await f.fFns.getDocs(q);
+    const out = [];
+    snap.forEach((d) => out.push({ id: d.id, ...d.data() }));
+    out.sort((a, b) => String(b.createdAtISO || '').localeCompare(String(a.createdAtISO || '')));
+    return out;
+  } catch (e) { console.warn('[XAVELLE] fetchOrdersByPhone failed:', e); return []; }
 }
 
 /* NOTE: Security Rules-এ orders পড়তে পারে শুধু admin বা অর্ডারের মালিক।

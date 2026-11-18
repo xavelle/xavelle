@@ -1,8 +1,8 @@
 /* XAVELLE — Phase 1: customer website (no admin panel).
    Hash router SPA. Cart + wishlist in localStorage. Orders → Firestore
    (or localStorage demo mode). All renders escape user-entered text. */
-import { isConfigured, fetchProducts, fetchSettings, saveOrder, fetchOrder, fetchReviews, submitReview, fetchCombos, sizeQty, totalStock, isOutOfStock, subscribeProducts, decrementStock } from './firebase.js?v=20261018';
-import * as fb from './firebase.js?v=20261018'; /* namespace: optional auth fns (signIn/signUp/resetPassword/fetchUserOrders) may not exist yet */
+import { isConfigured, fetchProducts, fetchSettings, saveOrder, fetchOrder, fetchReviews, submitReview, fetchCombos, sizeQty, totalStock, isOutOfStock, subscribeProducts, decrementStock } from './firebase.js?v=20261118a';
+import * as fb from './firebase.js?v=20261118a'; /* namespace: optional auth fns (signIn/signUp/resetPassword/fetchUserOrders) may not exist yet */
 
 /* ---------------- state ---------------- */
 const $ = (s, el = document) => el.querySelector(s);
@@ -73,7 +73,7 @@ function prodById(id) { return PRODUCTS.find((p) => p.id === id); }
 /* tags: নতুন `tags` array, পুরনো `tag` string fallback */
 function pTags(p) { if (p && Array.isArray(p.tags) && p.tags.length) return p.tags; return p && p.tag ? [p.tag] : []; }
 function hasTag(p, t) { return pTags(p).includes(t); }
-function stars(n) { return '★★★★★'.slice(0, Math.round(n)) + '☆☆☆☆☆'.slice(0, 5 - Math.round(n)); }
+function stars(n) { const pct = Math.max(0, Math.min(100, (Number(n) || 0) / 5 * 100)); return `<span class="star-wrap"><span class="star-bg">★★★★★</span><span class="star-fg" style="width:${pct}%"><span class="star-row">★★★★★</span></span></span>`; }
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600); }
 function validPhone(p) { return /^01[3-9]\d{8}$/.test(String(p || '').trim()); }
 
@@ -177,7 +177,7 @@ const I18N = {
   wished: { bn: '♥ সংরক্ষিত', en: '♥ Saved' },
   addWish: { bn: '♡ উইশলিস্ট', en: '♡ Wishlist' },
   offPct: { bn: '-{n}% ছাড়', en: '-{n}% off' },
-  metaDelivery: { bn: 'ডেলিভারি: ঢাকার ভিতরে ১–২ দিন, ঢাকার বাইরে ২–৪ দিন', en: 'Delivery: 1–2 days inside Dhaka, 2–4 days outside Dhaka' },
+  metaDelivery: { bn: 'ডেলিভারি: ঢাকা সিটি ১–২ দিন, সাব-এরিয়া ২–৩ দিন, ঢাকার বাইরে ২–৪ দিন', en: 'Delivery: Dhaka city 1–2 days, sub-area 2–3 days, outside Dhaka 2–4 days' },
   metaPay: { bn: 'পেমেন্ট: ক্যাশ অন ডেলিভারি, বিকাশ, নগদ', en: 'Payment: Cash on Delivery, bKash, Nagad' },
   metaReturn: { bn: 'ডেলিভারি ম্যানের সামনে প্রোডাক্ট চেক করে নিতে পারবেন', en: 'You can check the product in front of the delivery man' },
   copyLink: { bn: 'লিংক কপি করুন', en: 'Copy link' },
@@ -213,6 +213,7 @@ const I18N = {
   fDistrictPh: { bn: 'জেলা নির্বাচন করুন', en: 'Select district' },
   delTimeIn: { bn: 'ঢাকার ভিতরে ডেলিভারি: ১–২ দিন', en: 'Delivery inside Dhaka: 1–2 days' },
   delTimeOut: { bn: 'ঢাকার বাইরে ডেলিভারি: ২–৪ দিন', en: 'Delivery outside Dhaka: 2–4 days' },
+  delTimeSub: { bn: 'ঢাকার সাব-এরিয়া ডেলিভারি: ২–৩ দিন', en: 'Delivery in Dhaka sub-area: 2–3 days' },
   fAddr: { bn: 'সম্পূর্ণ ঠিকানা *', en: 'Full address *' },
   fAddrPh: { bn: 'বাড়ি/রোড/এলাকা', en: 'House/road/area' },
   fEmail: { bn: 'ইমেইল (ঐচ্ছিক)', en: 'Email (optional)' },
@@ -236,7 +237,7 @@ const I18N = {
   trxPh: { bn: '{m} TrxID লিখুন', en: 'Enter {m} TrxID' },
   senderNum: { bn: 'আপনার {m} নম্বর * (যে নম্বর থেকে পেমেন্ট করেছেন)', en: 'Your {m} number * (the number you paid from)' },
   coItems: { bn: 'অর্ডারের পণ্য', en: 'Order Items' },
-  coNote: { bn: 'ডেলিভারি: ৩–৭ কর্মদিবস। কোনো অগ্রিম পেমেন্ট লাগে না (COD)।', en: 'Delivery: 3–7 working days. No advance payment needed (COD).' },
+  coNote: { bn: 'ডেলিভারি: ঢাকা সিটিতে ১–২ দিন, সাব-এরিয়ায় ২–৩ দিন, ঢাকার বাইরে ২–৪ কর্মদিবস। কোনো অগ্রিম পেমেন্ট লাগে না (COD)।', en: 'Delivery: 1–2 days in Dhaka city, 2–3 days in sub-area, 2–4 working days outside Dhaka. No advance payment needed (COD).' },
   confirmOrder: { bn: 'অর্ডার কনফার্ম করুন', en: 'Confirm Order' },
   termsAgree: { bn: 'আমি <a href="#terms" target="_blank">শর্তাবলী</a> ও <a href="#returns" target="_blank">রিটার্ন পলিসি</a> পড়েছি ও মেনে নিলাম *', en: 'I have read and agree to the <a href="#terms" target="_blank">Terms & Conditions</a> and <a href="#returns" target="_blank">Return Policy</a> *' },
   freeDel: { bn: 'ফ্রি ডেলিভারি', en: 'FREE delivery' },
@@ -264,9 +265,17 @@ const I18N = {
   payNagad: { bn: 'নগদ', en: 'Nagad' },
   /* track */
   trT: { bn: 'অর্ডার ট্র্যাক করুন', en: 'Track Your Order' },
-  trDesc: { bn: 'অর্ডার আইডি (যেমন: AL-123456) ও অর্ডার করার সময় দেওয়া মোবাইল নম্বর দিন।', en: 'Enter your order ID (e.g. AL-123456) and the mobile number used for the order.' },
-  trId: { bn: 'অর্ডার নম্বর *', en: 'Order number *' },
-  trPhone: { bn: 'মোবাইল নম্বর *', en: 'Mobile number *' },
+  trDesc: { bn: 'অর্ডার নম্বর দিয়ে, অথবা শুধু মোবাইল নম্বর দিয়েও আপনার অর্ডার খুঁজে পাবেন — যেকোনো একটা দিলেই হবে।', en: 'Find your order with the order number, or with just the mobile number you ordered with — either one works.' },
+  trId: { bn: 'অর্ডার নম্বর (যদি থাকে)', en: 'Order number (if you have it)' },
+  trPhone: { bn: 'মোবাইল নম্বর', en: 'Mobile number' },
+  trNeedOne: { bn: 'অর্ডার নম্বর অথবা মোবাইল নম্বর — যেকোনো একটা দিন।', en: 'Enter your order number or your mobile number.' },
+  trByPhoneT: { bn: 'এই নম্বরে করা অর্ডার', en: 'Orders placed with this number' },
+  trTapHint: { bn: 'যেকোনো একটায় চাপ দিলে বিস্তারিত দেখা যাবে।', en: 'Tap any order to see details.' },
+  trDateLbl: { bn: 'অর্ডারের তারিখ:', en: 'Order date:' },
+  osEstDel: { bn: 'সম্ভাব্য ডেলিভারি:', en: 'Estimated delivery:' },
+  copyId: { bn: '📋 কপি করুন', en: '📋 Copy' },
+  copiedId: { bn: 'অর্ডার নম্বর কপি হয়েছে!', en: 'Order number copied!' },
+  rateNone: { bn: 'এখনো রেটিং নেই', en: 'No ratings yet' },
   trErr: { bn: 'অর্ডার আইডি ও মোবাইল নম্বর দুটোই দিন।', en: 'Enter both order ID and mobile number.' },
   trNotFound: { bn: 'অর্ডার পাওয়া যায়নি', en: 'Order not found' },
   trNotFoundP: { bn: 'অর্ডার আইডি ও মোবাইল নম্বর ঠিক আছে কিনা দেখুন।', en: 'Check that the order ID and mobile number are correct.' },
@@ -327,7 +336,7 @@ const I18N = {
   dlCourierH: { bn: 'কুরিয়ার', en: 'Courier' },
   dlCourierP: { bn: 'আমরা Steadfast, Pathao Courier, Paperfly, Sundarban, SA Paribahan ও RedX-এর মাধ্যমে ডেলিভারি করি। অর্ডার ডিসপ্যাচ হলে ট্র্যাকিং নম্বর SMS/কলের মাধ্যমে জানিয়ে দেওয়া হয়।', en: 'We deliver via Steadfast, Pathao Courier, Paperfly, Sundarban, SA Paribahan and RedX. You will receive the tracking number by SMS/call once your order is dispatched.' },
   dlTrackH: { bn: 'অর্ডার ট্র্যাকিং', en: 'Order tracking' },
-  dlTrackP: { bn: 'Track Order পেজে অর্ডার আইডি ও মোবাইল নম্বর দিয়ে যেকোনো সময় অর্ডারের অবস্থা দেখতে পারবেন।', en: 'You can check your order status anytime on the Track Order page with your order ID and mobile number.' },
+  dlTrackP: { bn: 'Track Order পেজে অর্ডার আইডি অথবা শুধু মোবাইল নম্বর দিয়ে যেকোনো সময় অর্ডারের অবস্থা দেখতে পারবেন।', en: 'You can check your order status anytime on the Track Order page with your order ID or just your mobile number.' },
   /* returns page */
   rtT: { bn: 'রিটার্ন ও রিফান্ড পলিসি', en: 'Return & Refund Policy' },
   rtCheckH: { bn: 'ডেলিভারির সময় চেক করুন', en: 'Check at delivery time' },
@@ -863,7 +872,7 @@ function viewProduct(id) {
       <span style="color:var(--muted); font-size:13px">${esc(prodMainLabel(p))}</span>
       <h1>${esc(name)}</h1>
       ${p.sku ? `<div class="sku-line">SKU: <b>${esc(p.sku)}</b></div>` : ''}
-      <div class="stars">${stars(4.5)} <span style="color:var(--muted); font-size:13px">(4.5)</span></div>
+      ${(() => { const rv = seedReviews[p.id] || []; if (!rv.length) return `<div style="color:var(--muted); font-size:13px">${t('rateNone')}</div>`; const avg = rv.reduce((s, r) => s + (r.rating || 0), 0) / rv.length; return `<div class="stars">${stars(avg)} <span style="color:var(--muted); font-size:13px">(${avg.toFixed(1)}) · ${t('revCount', { n: rv.length })}</span></div>`; })()}
       <div class="pd-price"><b>${fmt(p.price)}</b>${off > 0 ? `<s>${fmt(p.oldPrice)}</s>` : ''}${off > 0 ? ` <span style="color:var(--red); font-weight:700">${t('offPct', { n: off })}</span>` : ''}</div>
       <p class="desc">${esc(desc)}</p>
       ${(() => { const f = p.fabric || {}; const parts = [];
@@ -895,7 +904,7 @@ function viewProduct(id) {
       })()}
       <div class="order-alt"><a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="https://wa.me/${esc(SETTINGS.whatsapp)}?text=${waText}">${t('waOrder')}</a>${msgUrl ? ` <a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="${esc(msgUrl)}">${t('msgChat')}</a>` : ''}</div>
       <div class="meta-box">
-        <div>${t('metaDelivery')}</div>
+        <div>${deliveryMetaLine()}</div>
         <div>${t('metaPay')}</div>
         <div>${t('metaReturn')}</div>
       </div>
@@ -1015,10 +1024,38 @@ function viewCart() {
     ${total >= freeAbove ? `<p style="color:var(--green); font-weight:700; margin:10px 0">${t('freeShipWon')}</p>` : `<p style="font-size:13px; color:var(--muted); margin:10px 0">${t('freeShipMore', { x: fmt(freeAbove - total) })}</p><div class="ship-progress"><i style="width:${pct}%"></i></div>`}
     <div class="tot-row"><span>${t('subtotal')}</span><b>${fmt(total)}</b></div>
     <div class="tot-row"><span>${t('delivery')}</span><b>${t('delAtCheckout')}</b></div>
+    <p style="font-size:12.5px; color:var(--muted); margin:2px 0 6px">${deliveryMetaLine()}</p>
     <div class="tot-row grand"><span>${t('total')}</span><b>${fmt(total)}</b></div>
     <a class="btn btn-block" href="#checkout" style="margin-top:12px" ${!cart.length ? 'onclick="return false" style="opacity:.5"' : ''}>${t('checkoutBtn')}</a>
     <a class="btn btn-outline btn-block" href="#shop" style="margin-top:8px">${t('continueShop')}</a>
   </div></div></section>`;
+}
+
+/* ডেলিভারি তথ্য — একটাই সূত্র: পণ্য পেজ, কার্ট, চেকআউট সবখানে একই লাইন */
+function deliveryMetaLine() {
+  const c = SETTINGS.deliveryCity ?? 70, s = SETTINGS.deliverySub ?? 90, o = SETTINGS.deliveryOutside ?? 110;
+  return LANG === 'bn'
+    ? `🚚 ডেলিভারি: ঢাকা সিটি ১–২ দিন (${fmt(c)}) • সাব-এরিয়া ২–৩ দিন (${fmt(s)}) • ঢাকার বাইরে ২–৪ দিন (${fmt(o)})`
+    : `🚚 Delivery: Dhaka city 1–2 days (${fmt(c)}) • Sub-area 2–3 days (${fmt(s)}) • Outside Dhaka 2–4 days (${fmt(o)})`;
+}
+function fmtDate(v) {
+  try {
+    const d = v && v.seconds ? new Date(v.seconds * 1000) : new Date(v);
+    if (!v || isNaN(d)) return '';
+    return d.toLocaleDateString(LANG === 'bn' ? 'bn-BD' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch { return ''; }
+}
+/* জেলা অনুযায়ী সম্ভাব্য ডেলিভারির তারিখের পরিসর (অর্ডারের তারিখ থেকে) */
+function estDelivery(district, fromVal) {
+  if (!district) return '';
+  const days = district.startsWith('ঢাকা (সিটি)') ? [1, 2] : district.startsWith('ঢাকা (সাব') ? [2, 3] : [2, 4];
+  let base;
+  try { base = fromVal && fromVal.seconds ? new Date(fromVal.seconds * 1000) : (fromVal ? new Date(fromVal) : new Date()); if (isNaN(base)) base = new Date(); } catch { base = new Date(); }
+  const f = (n) => { const x = new Date(base); x.setDate(x.getDate() + n); return x.toLocaleDateString(LANG === 'bn' ? 'bn-BD' : 'en-GB', { day: 'numeric', month: 'short' }); };
+  return `${f(days[0])} – ${f(days[1])}`;
+}
+async function copyOrderId(id) {
+  try { await navigator.clipboard.writeText(id); toast(t('copiedId')); } catch { /* clipboard unavailable */ }
 }
 
 /* ================= CHECKOUT ================= */
@@ -1247,7 +1284,7 @@ function viewOrderSuccess(orderId) {
   const payLabel = { cod: t('payCOD'), bkash: t('payBkash'), nagad: t('payNagad') }[(order.pay || '').toLowerCase()] || esc(order.pay || '');
   return `<section class="section"><div class="card" style="max-width:680px; margin:0 auto">
     <h2 style="color:var(--green); text-align:center">${t('osT')}</h2>
-    <p style="text-align:center; margin:10px 0">${t('osId')} <b style="font-size:22px; color:var(--navy)">${esc(orderId)}</b></p>
+    <p style="text-align:center; margin:10px 0">${t('osId')} <b style="font-size:22px; color:var(--navy)">${esc(orderId)}</b> <button class="btn btn-outline btn-sm" onclick="copyOrderId('${esc(orderId)}')">${t('copyId')}</button></p>
     <h3 style="margin:16px 0 6px; color:var(--navy)">${t('osItems')}</h3>
     ${(order.items || []).map((i) => `<div class="tot-row"><span>${esc(i.name)} × ${i.qty}${i.size ? ' ' + t('sizeInParen', { s: i.size }) : ''}</span><b>${fmt(i.price * i.qty)}</b></div>`).join('')}
     <div class="tot-row"><span>${t('subtotal')}</span><b>${fmt(order.subtotal)}</b></div>
@@ -1257,6 +1294,7 @@ function viewOrderSuccess(orderId) {
     <h3 style="margin:16px 0 6px; color:var(--navy)">${t('osDelInfo')}</h3>
     <p style="font-size:14px">${esc(order.name)} • ${esc(order.phone)}<br>${esc(order.district)}<br>${esc(order.address)}</p>
     <p style="font-size:14px; margin-top:6px">${t('osPay')} <b>${payLabel}</b></p>
+    ${estDelivery(order.district, order.createdAt) ? `<p style="font-size:14px; margin-top:6px">${t('osEstDel')} <b>${esc(estDelivery(order.district, order.createdAt))}</b></p>` : ''}
     ${order.trxId ? `<p style="font-size:14px">${t('osTrx')} <b>${esc(order.trxId)}</b></p>` : ''}
     ${order.senderNumber ? `<p style="font-size:14px">${t('osPayNum')} <b>${esc(order.senderNumber)}</b></p>` : ''}
     <p style="color:var(--muted); font-size:14px; margin-top:10px">${t('osNote')}</p>
@@ -1292,6 +1330,7 @@ function renderTrackResult(o) {
   el.innerHTML = `<div style="margin-top:18px">
     <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px"><b>${t('osIdLbl')} ${esc(o.orderId)}</b><span class="status-pill ${cancelled ? 'cancelled' : (stage === 'delivered' ? 'delivered' : '')}">${stageLabel(stage)}</span></div>
     <p style="font-size:14px; color:var(--muted); margin-top:6px">${t('trTotal')} ${fmt(o.total)} • ${t('osPay')} ${esc((o.pay || '').toUpperCase())} • ${esc(o.district || '')}</p>
+    ${o.createdAt ? `<p style="font-size:13px; color:var(--muted); margin-top:4px">${t('trDateLbl')} ${esc(fmtDate(o.createdAt))}${estDelivery(o.district, o.createdAt) ? ` • ${t('osEstDel')} ${esc(estDelivery(o.district, o.createdAt))}` : ''}</p>` : ''}
     <p style="margin-top:6px"><span class="status-pill ${o.paid ? 'delivered' : ''}">${o.paid ? t('payVerified') : t('payPending')}</span>${o.trxId ? ` <span style="font-size:13px; color:var(--muted)">TrxID: <b>${esc(o.trxId)}</b></span>` : ''}</p>
     ${cancelled ? `<p style="color:var(--red); font-weight:700; margin-top:10px">${t('trCancelled')}${o.cancelReason ? ' ' + t('trReason') + ' ' + esc(o.cancelReason) : ''}</p>` :
     `<div class="timeline">${visible.map((s) => { const si = STAGES.findIndex((x) => x.key === s.key); const cls = si < idx ? 'done' : (si === idx ? 'current' : ''); return `<div class="tl-step ${cls}"><b>${stageLabel(s.key)}</b><span>${si <= idx ? t('trDone') : t('trPending')}</span></div>`; }).join('')}</div>`}
@@ -1301,24 +1340,71 @@ function renderTrackResult(o) {
 }
 
 async function doTrack() {
-  const id = $('#trId').value.trim();
+  const id = $('#trId').value.trim().toUpperCase();
   const phone = $('#trPhone').value.trim();
-  if (!id || !phone) { $('#trErr').textContent = t('trErr'); return; }
+  const res = $('#trResult');
+  if (res) res.innerHTML = ''; /* আগের ফল মুছে ফেলি — ভুল খোঁজে পুরনো ফল থেকে যাওয়ার বাগ ঠিক */
+  if (!id && !phone) { $('#trErr').textContent = t('trNeedOne'); return; }
   $('#trErr').textContent = '';
-  let o = await fetchOrder(id, phone);
-  if (!o) o = localOrders.find((x) => x.orderId === id && x.phone === phone) || null;
-  /* Firebase connected + guest: public status mirror (শুধু status, customer data ছাড়া) */
-  if (!o && typeof fb.fetchOrderStatus === 'function') {
-    try {
-      const s = await fb.fetchOrderStatus(id);
-      if (s && s.orderId) { renderTrackStatusOnly(s); return; }
-    } catch { /* fall through to not-found */ }
+  if (id) {
+    let o = null;
+    if (phone) {
+      o = await fetchOrder(id, phone);
+      if (!o) o = localOrders.find((x) => x.orderId === id && x.phone === phone) || null;
+    } else {
+      o = localOrders.find((x) => x.orderId === id) || null;
+    }
+    if (o) { renderTrackResult(o); return; }
+    /* Guest: public mirror — এখন পণ্য/টাকাসহ বিস্তারিত */
+    if (typeof fb.fetchOrderStatus === 'function') {
+      try {
+        const s = await fb.fetchOrderStatus(id);
+        if (s && s.orderId) {
+          if (phone && s.phoneHash) {
+            const h = await fb.phoneHashOf(phone);
+            if (h !== s.phoneHash) { renderTrackResult(null); return; }
+          }
+          renderMirrorOrder(s); return;
+        }
+      } catch { /* fall through to not-found */ }
+    }
+    renderTrackResult(null);
+    return;
   }
-  renderTrackResult(o);
+  /* শুধু মোবাইল নম্বর: ওই নম্বরের সব অর্ডার */
+  let remote = [];
+  if (typeof fb.fetchOrdersByPhone === 'function') { try { remote = await fb.fetchOrdersByPhone(phone); } catch { remote = []; } }
+  if (!remote.length) {
+    const local = localOrders.filter((x) => x.phone === phone);
+    if (local.length) { renderTrackResult(local[local.length - 1]); return; }
+    renderTrackResult(null);
+    return;
+  }
+  if (remote.length === 1) { renderMirrorOrder(remote[0]); return; }
+  res.innerHTML = `<div style="margin-top:18px"><b>${t('trByPhoneT')} (${remote.length})</b><p style="font-size:13px; color:var(--muted); margin:4px 0 2px">${t('trTapHint')}</p>${remote.map((m) => `<button class="btn btn-outline btn-block" style="margin-top:8px; text-align:left" onclick="showTrackOrder('${esc(m.orderId)}')">${esc(m.orderId)} • ${fmt(m.total || 0)} • ${stageLabel(m.status || 'pending')}${m.createdAtISO ? ' • ' + esc(fmtDate(m.createdAtISO)) : ''}</button>`).join('')}</div>`;
 }
 
-/* শুধু status দেখায় — mirror-এ items/total থাকে না */
-function renderTrackStatusOnly(s) {
+async function showTrackOrder(id) {
+  try {
+    const s = await fb.fetchOrderStatus(id);
+    if (s && s.orderId) { renderMirrorOrder(s); return; }
+  } catch { /* ignore */ }
+  renderTrackResult(null);
+}
+
+/* Public mirror → পূর্ণ tracking view। পুরনো mirror-এ (এই ফিক্সের আগের
+   অর্ডার) পণ্য/টাকা থাকে না — তখন শুধু status দেখায়। */
+function renderMirrorOrder(m) {
+  if (m && (m.items || m.total)) {
+    renderTrackResult({
+      orderId: m.orderId, stage: m.status || 'pending', paid: !!m.paid, pay: m.pay || '',
+      total: m.total || 0, district: m.district || '', items: m.items || [],
+      courier: m.courier || '', trackingNumber: m.trackingNumber || '', dispatchDate: m.dispatchDate || '',
+      createdAt: m.createdAtISO || '',
+    });
+    return;
+  }
+  const s = m || {};
   const el = $('#trResult');
   const stage = s.status || 'pending';
   const idx = STAGES.findIndex((x) => x.key === stage);
@@ -1530,7 +1616,7 @@ bindDynamic = function () {
     $('#coDistrict').addEventListener('change', () => {
       const dv = $('#coDistrict').value;
       const dt = $('#coDelTime');
-      if (dt) dt.textContent = !dv ? '' : (dv.startsWith('ঢাকা (সিটি)') ? t('delTimeIn') : t('delTimeOut'));
+      if (dt) dt.textContent = !dv ? '' : (dv.startsWith('ঢাকা (সিটি)') ? t('delTimeIn') : dv.startsWith('ঢাকা (সাব') ? t('delTimeSub') : t('delTimeOut'));
       refreshCheckoutTotals();
     });
     const cpnBtn = $('#cpnApply');
@@ -1837,5 +1923,7 @@ async function loadAccountOrders() {
 /* expose inline handlers */
 window.setQty = setQty;
 window.removeItem = removeItem;
+window.showTrackOrder = showTrackOrder;
+window.copyOrderId = copyOrderId;
 
 init();

@@ -469,3 +469,11 @@ img { max-width: 100%; display: block; }
 .skl-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .skl-card { height: 300px; }
 @media (max-width: 900px) { .skl-grid { grid-template-columns: repeat(2, 1fr); } .skl-hero { height: 200px; } }
+
+/* --- 2026-11-18 audit fixes --- */
+[hidden]{display:none!important}
+.star-wrap{position:relative;display:inline-block;line-height:1}
+.star-bg{color:#d9dde7}
+.star-fg{position:absolute;left:0;top:0;overflow:hidden;color:var(--gold)}
+.star-row{display:inline-block;white-space:nowrap}
+@media (max-width:640px){ .hero-title{font-size:19px} .hero-cta{bottom:12px} }
