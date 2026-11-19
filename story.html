@@ -141,7 +141,7 @@
 <section class="film-wrap" id="filmWrap">
   <div class="stage" id="stage">
     <div class="progress" id="progress"></div>
-    <video id="filmSrc" class="bg" src="story-film.mp4?v=20261119" muted playsinline preload="auto"></video>
+    <video id="filmSrc" class="bg" src="story-film.mp4?v=20261119b" autoplay loop muted playsinline preload="auto"></video>
     <canvas id="film"></canvas>
     <div class="loader" id="loader">গল্প লোড হচ্ছে…</div>
 
@@ -350,10 +350,6 @@ window.__storyGate = (function(){
       var diff = target - current;
       if (Math.abs(diff) > 0.0004){
         current += diff * 0.14;
-        var t = current * video.duration;
-        if (Math.abs(video.currentTime - t) > 0.02){
-          try { video.currentTime = t; } catch(e){}
-        }
       }
       if (video.readyState >= 2 && Math.abs(video.currentTime - lastDrawn) > 0.004){
         lastDrawn = video.currentTime;
@@ -380,21 +376,14 @@ window.__storyGate = (function(){
     ready = true;
     hideLoader();
     fitCanvas();
-    try { video.currentTime = 0.01; } catch(e){}
+    var p = video.play(); if (p && p.catch) p.catch(function(){});
     draw();
   });
 
-  /* Prime the decoder: a muted play/pause forces frame decoding in
-     browsers that will not decode a paused, never-played video. */
+  /* The film plays continuously on a loop (autoplay, muted) — it is no
+     longer driven by scroll. Scroll only moves the story captions. */
   video.addEventListener('canplay', function(){
-    if (ready) return;
-    var p = video.play();
-    if (p && p.then){
-      p.then(function(){
-        video.pause();
-        try { video.currentTime = 0.01; } catch(e){}
-      }).catch(function(){});
-    }
+    if (video.paused){ var p = video.play(); if (p && p.catch) p.catch(function(){}); }
   });
 
   /* Failsafe: never leave the loader covering the page. */
