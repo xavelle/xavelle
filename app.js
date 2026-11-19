@@ -105,7 +105,7 @@ const I18N = {
   fShopH: { bn: 'শপ', en: 'Shop' },
   fInfoH: { bn: 'তথ্য', en: 'Information' },
   fTalkH: { bn: 'যোগাযোগ করুন', en: 'Talk To Us' },
-  fBlurb: { bn: 'বাংলাদেশের ইসলামিক লাইফস্টাইল ফ্যাশন ব্র্যান্ড। মানসম্মত পণ্য, সেরা দামে, সারা বাংলাদেশে ডেলিভারি।', en: 'An Islamic lifestyle fashion brand of Bangladesh. Quality products at the best prices, delivered all over Bangladesh.' },
+  fBlurb: { bn: 'বাংলাদেশের প্রিমিয়াম লেডিস ফ্যাশন ব্র্যান্ড। মানসম্মত পণ্য, সেরা দামে, সারা বাংলাদেশে ডেলিভারি।', en: 'A premium ladies fashion brand of Bangladesh. Quality products at the best prices, delivered all over Bangladesh.' },
   fHours: { bn: 'হটলাইন: <b style="color:#fff">{p}</b> (সকাল ১০টা – রাত ৯টা)', en: 'Hotline: <b style="color:#fff">{p}</b> (10 AM – 9 PM)' },
   fContact: { bn: 'যোগাযোগ করুন →', en: 'Contact Us →' },
   fBottom: { bn: '© ২০২৬ XAVELLE। সর্বস্বত্ব সংরক্ষিত।', en: '© 2026 XAVELLE. All rights reserved.' },
@@ -381,7 +381,7 @@ const I18N = {
   tmP6: { bn: 'এই শর্তাবলী যেকোনো সময় পরিবর্তন হতে পারে; আপডেট এই পেজে প্রকাশ করা হবে।', en: 'These terms may change at any time; updates will be published on this page.' },
   /* about */
   abT: { bn: 'XAVELLE সম্পর্কে', en: 'About XAVELLE' },
-  abP1: { bn: 'XAVELLE বাংলাদেশের একটি ইসলামিক লাইফস্টাইল ফ্যাশন ব্র্যান্ড। সুন্নাহ অনুসরণে পরিমার্জিত মেয়েদের পোশাক — জামদানি শাড়ি, কুর্তি, থ্রি-পিস ও হিজাব আমরা সেরা দামে পৌঁছে দিই।', en: 'XAVELLE is an Islamic lifestyle fashion brand of Bangladesh. We deliver refined clothing for women, inspired by the Sunnah — Jamdani sarees, kurtis, three-pieces and hijabs — at the best prices.' },
+  abP1: { bn: 'XAVELLE বাংলাদেশের একটি প্রিমিয়াম লেডিস ফ্যাশন ব্র্যান্ড। যত্নে বাছাই করা পরিমার্জিত মেয়েদের পোশাক — জামদানি শাড়ি, কুর্তি, থ্রি-পিস ও হিজাব — আমরা সেরা দামে পৌঁছে দিই।', en: 'XAVELLE is a premium ladies fashion brand of Bangladesh. We deliver carefully curated, refined clothing for women — Jamdani sarees, kurtis, three-pieces and hijabs — elegance in every detail, at the best prices.' },
   abH2: { bn: 'আমাদের প্রতিশ্রুতি', en: 'Our promise' },
   abL1: { bn: 'যাচাই করা মানসম্মত পণ্য', en: 'Verified quality products' },
   abL2: { bn: 'স্বচ্ছ মূল্য — লুকানো চার্জ নেই', en: 'Transparent pricing — no hidden charges' },
