@@ -476,6 +476,14 @@ async function saveProdForm() {
   if (!images.length) { err.textContent = 'কমপক্ষে ১টি ছবি দিন (গ্যালারি বা URL)।'; return; }
   const oldPrice = Number($('#pfOldPrice').value) || 0;
   const { sizes, sizeStock } = collectSizes();
+  /* পুরনো প্রোডাক্ট (sizeStock নেই, আগের স্টক > ০): সাইজের ঘর ফাঁকা রেখে সেভ করলে স্টক ০ হয়ে যেত — আটকাও।
+     ইচ্ছে করে ০ করতে চাইলে অন্তত একটা ঘরে ০ লিখলেই চলবে (তখন আর সব-ফাঁকা থাকে না)। */
+  if (sizes.length && editingId) {
+    const prev = products.find((x) => x.id === editingId);
+    const prevLegacy = prev && !(prev.sizeStock && Object.keys(prev.sizeStock).length) && (Number(prev.stock) || 0) > 0;
+    const allBlank = $$('#sizeRows .sz-qty').every((i) => i.value.trim() === '');
+    if (prevLegacy && allBlank) { err.textContent = `আগের মোট স্টক ছিল ${prev.stock} পিস — প্রতি সাইজে কত পিস আছে লিখুন, নয়তো স্টক ০ হয়ে যাবে।`; return; }
+  }
   let stock;
   if (sizes.length) {
     stock = Object.values(sizeStock).reduce((s, q) => s + q, 0);
