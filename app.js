@@ -1343,7 +1343,7 @@ function viewTrack() {
 }
 
 function stageLabel(key) {
-  const s = STAGES.find((x) => x.key === key) || { bn: key, en: key };
+  const s = STAGES.find((x) => x.key === key) || { bn: esc(key), en: esc(key) }; /* অজানা মান escape করা — ট্র্যাকিং পেজে XSS রোধ */
   return LANG === 'bn' ? s.bn : s.en;
 }
 

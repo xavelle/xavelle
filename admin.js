@@ -598,7 +598,7 @@ async function saveCategories() {
 
 /* ================= ORDERS ================= */
 function orderCard(o) {
-  const items = (o.items || []).map((i) => `${esc(i.name || i.id)} × ${i.qty}${i.size ? ' (' + esc(i.size) + ')' : ''} — ${fmt(i.price * i.qty)}`).join('<br>');
+  const items = (o.items || []).map((i) => `${esc(i.name || i.id)} × ${Number(i.qty) || 0}${i.size ? ' (' + esc(i.size) + ')' : ''} — ${fmt(Number(i.price) * Number(i.qty))}`).join('<br>');
   const pay = PAY_BN[(o.pay || '').toLowerCase()] || esc(o.pay || '');
   return `<div class="order-card compact" data-oid="${esc(o.id)}">
     <div class="order-head compact-head">
