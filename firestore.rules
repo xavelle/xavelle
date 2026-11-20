@@ -149,8 +149,7 @@ service cloud.firestore {
                  লগইন করা গ্রাহক শুধু নিজের pending/confirmed অর্ডারে cancel request */
     match /orders/{id} {
       allow create: if hasTab('orders') || validOrderCreate();
-      allow get: if hasTab('orders') || (request.auth != null && resource.data.uid == request.auth.uid);
-      allow list: if hasTab('orders');
+      allow read: if hasTab('orders') || (request.auth != null && resource.data.uid == request.auth.uid);
       allow update: if orderFull() || (hasTab('orders') && onlyKeys(['stage', 'paid', 'updatedAt']));
       allow update: if request.auth != null
         && resource.data.uid == request.auth.uid

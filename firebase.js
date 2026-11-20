@@ -578,13 +578,23 @@ export async function fetchMyOrders(uid) {
   const f = await fb();
   if (!f || !uid) return [];
   try {
+    const byId = new Map();
     const prof = await getMyProfile(uid);
     const ids = (prof && Array.isArray(prof.orderIds) ? prof.orderIds : []).slice(-50);
-    if (!ids.length) return [];
-    const snaps = await Promise.all(
-      ids.map((id) => f.fFns.getDoc(f.fFns.doc(f.db, C.orders, String(id))).catch(() => null)));
-    const list = [];
-    snaps.forEach((s) => { if (s && s.exists()) list.push({ id: s.id, ...s.data() }); });
+    if (ids.length) {
+      const snaps = await Promise.all(
+        ids.map((id) => f.fFns.getDoc(f.fFns.doc(f.db, C.orders, String(id))).catch(() => null)));
+      snaps.forEach((s) => { if (s && s.exists()) byId.set(s.id, { id: s.id, ...s.data() }); });
+    }
+    /* fallback: সরাসরি uid দিয়ে query — orderIds-তে যোগ হতে কোনো কারণে
+       ব্যর্থ হলেও (নেটওয়ার্ক/সেশন সমস্যা) অর্ডার My Orders-এ দেখাবে।
+       Rules: orders read-এ নিজের uid-র অর্ডার list অনুমোদিত। */
+    try {
+      const q = f.fFns.query(f.fFns.collection(f.db, C.orders), f.fFns.where('uid', '==', uid));
+      const qs = await f.fFns.getDocs(q);
+      qs.forEach((d) => { if (!byId.has(d.id)) byId.set(d.id, { id: d.id, ...d.data() }); });
+    } catch (e) { console.warn('[XAVELLE] fetchMyOrders uid-query failed:', e); }
+    const list = [...byId.values()];
     list.sort((a, b) => String(b.createdAt || '') < String(a.createdAt || '') ? -1 : 1);
     return list;
   } catch (e) { console.warn('[XAVELLE] fetchMyOrders failed:', e); return []; }
