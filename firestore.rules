@@ -1,13 +1,14 @@
 rules_version = '2';
 
-/* AURA LIFESTYLE — Firestore Security Rules (tab-based permissions)
+/* XAVELLE — Firestore Security Rules (tab-based permissions)
    ─────────────────────────────────────────────────────
    - owner: hardcoded UID নিচে (সবকিছু)
    - staff: Firestore `staff/{uid}` ডকুমেন্টে { tabs: [...], orderFull, suspended }
-     (Admin Panel → স্টাফ tab থেকে owner বানায়/এডিট করে)
-   - tabs না থাকলে legacy role fallback (manager/assistant)
    - suspended: true হলে সব access বন্ধ
-   - Login panel একটাই — tabs অনুযায়ী tab দেখা যায় */
+
+   ⚠ Publish করার আগে Firebase Console → Firestore → Rules → "Rules Playground"-এ
+     টেস্ট করুন, তারপর একটা টেস্ট অর্ডার দিন। সমস্যা হলে
+     firestore.rules.backup-original ফেরত দিন।                                   */
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -18,7 +19,6 @@ service cloud.firestore {
     function isOwner() {
       return request.auth != null && request.auth.uid == ownerUid();
     }
-    /* staff/{uid} ডকুমেন্ট (Firestore rules-এ if চলে না — ternary ব্যবহার) */
     function sd() {
       return request.auth == null ? null
         : exists(/databases/$(database)/documents/staff/$(request.auth.uid))
@@ -28,7 +28,6 @@ service cloud.firestore {
     function isSuspended() {
       return sd() != null && sd().get('suspended', false) == true;
     }
-    /* tabs array; পুরনো role-only ডকুমেন্টে preset fallback */
     function myTabs() {
       return request.auth == null || isSuspended() ? []
         : request.auth.uid == ownerUid() ? ['*']
@@ -40,7 +39,6 @@ service cloud.firestore {
         : [];
     }
     function hasTab(t) { return '*' in myTabs() || t in myTabs(); }
-    /* অর্ডার ফুল কন্ট্রোল (stage-এর বাইরে edit) */
     function orderFull() {
       return request.auth != null && !isSuspended() && (
         request.auth.uid == ownerUid() ? true
@@ -51,34 +49,91 @@ service cloud.firestore {
     function onlyKeys(keys) {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
     }
-    /* গ্রাহক অর্ডার করলে শুধু স্টক সংখ্যা কমাতে পারবে —
-       দাম/নাম/ছবি/অন্য field বদলানো যাবে না; scalar `stock` বাড়ানো যাবে না */
-    function publicStockDecrement() {
-      let changed = request.resource.data.diff(resource.data).affectedKeys();
-      return changed.hasOnly(['sizeStock', 'stock'])
-          && (!changed.hasAny(['stock']) || request.resource.data.stock <= resource.data.get('stock', 0));
-    }
     function isOwnerUid(userId) {
       return request.auth != null && request.auth.uid == userId;
     }
 
-    /* Staff: staff-tab আছে এমন owner/staff দেখে/লেখে; staff নিজেরটা পড়তে পারে */
+    /* গ্রাহক অর্ডার করলে শুধু স্টক সংখ্যা কমাতে পারবে।
+       - দাম/নাম/ছবি/অন্য field বদলানো যাবে না
+       - scalar `stock` বাড়ানো যাবে না, ঋণাত্মক হবে না
+       - sizeStock-এ নতুন key যোগ/বাদ দেওয়া যাবে না
+       ⚠ Rules দিয়ে sizeStock-এর প্রতিটি মান আলাদা করে যাচাই করা যায় না
+         (পূর্ণ সমাধান: Cloud Function — README-FIXES দেখুন) */
+    function publicStockDecrement() {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return changed.hasOnly(['sizeStock', 'stock'])
+          && (!changed.hasAny(['stock'])
+              || (request.resource.data.stock is number
+                  && request.resource.data.stock >= 0
+                  && request.resource.data.stock <= resource.data.get('stock', 0)))
+          && (!changed.hasAny(['sizeStock'])
+              || (request.resource.data.sizeStock is map
+                  && resource.data.get('sizeStock', null) != null
+                  && request.resource.data.sizeStock.size() == resource.data.sizeStock.size()
+                  && request.resource.data.sizeStock.keys().hasOnly(resource.data.sizeStock.keys())));
+    }
+
+    /* নতুন অর্ডারের ফরম্যাট যাচাই (guest checkout) */
+    function validOrderCreate() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['orderId', 'name', 'phone', 'district', 'address', 'email', 'whats', 'note', 'pay',
+                               'trxId', 'senderNumber', 'uid', 'userEmail', 'items', 'subtotal', 'discount', 'coupon',
+                               'delivery', 'total', 'stage', 'paid', 'courier', 'trackingNumber', 'dispatchDate', 'createdAt'])
+          && d.keys().hasAll(['orderId', 'name', 'phone', 'district', 'address', 'items', 'total', 'stage'])
+          && d.orderId is string && d.orderId.size() >= 4 && d.orderId.size() <= 40
+          && d.name is string && d.name.size() > 0 && d.name.size() <= 120
+          && d.phone is string && d.phone.matches('01[3-9][0-9]{8}')
+          && d.district is string && d.district.size() > 0 && d.district.size() <= 60
+          && d.address is string && d.address.size() > 0 && d.address.size() <= 600
+          && d.get('note', '') is string && d.get('note', '').size() <= 1000
+          && d.get('email', '') is string && d.get('email', '').size() <= 120
+          && d.get('whats', '') is string && d.get('whats', '').size() <= 40
+          && d.get('pay', '') is string && d.get('pay', '').size() <= 30
+          && d.get('trxId', '') is string && d.get('trxId', '').size() <= 60
+          && d.get('senderNumber', '') is string && d.get('senderNumber', '').size() <= 40
+          && d.items is list && d.items.size() > 0 && d.items.size() <= 50
+          && d.total is number && d.total >= 0 && d.total <= 10000000
+          && d.stage == 'pending'
+          && d.get('paid', false) == false;
+    }
+
+    /* পাবলিক ট্র্যাকিং মিরর — নতুন ডক শুধু 'pending' দিয়ে শুরু হতে পারবে */
+    function validStatusCreate(id) {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['orderId', 'status', 'paid', 'pay', 'items', 'subtotal', 'discount', 'delivery',
+                               'total', 'district', 'createdAtISO', 'phoneHash', 'updatedAt'])
+          && d.orderId is string && d.orderId == id && id.size() <= 40
+          && d.status == 'pending'
+          && d.get('paid', false) == false
+          && d.get('pay', '') is string && d.get('pay', '').size() <= 30
+          && d.items is list && d.items.size() <= 50
+          && d.get('district', '') is string && d.get('district', '').size() <= 60
+          && d.get('phoneHash', '') is string && d.get('phoneHash', '').size() <= 80;
+    }
+
+    /* রিভিউ ফরম্যাট যাচাই (spam কমাতে) */
+    function validReviewCreate() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['productId', 'name', 'rating', 'text', 'verified', 'status', 'createdAt'])
+          && d.productId is string && d.productId.size() > 0 && d.productId.size() <= 100
+          && d.name is string && d.name.size() > 0 && d.name.size() <= 60
+          && d.text is string && d.text.size() > 0 && d.text.size() <= 600
+          && d.rating is number && d.rating >= 1 && d.rating <= 5
+          && d.get('verified', false) == false
+          && d.status == 'approved';
+    }
+
     match /staff/{uid} {
       allow get: if hasTab('staff') || (request.auth != null && request.auth.uid == uid);
       allow list, create, update, delete: if hasTab('staff');
     }
 
-    /* Products: সবাই পড়তে পারে; লেখে products-tab */
     match /products/{id} {
       allow read: if true;
       allow create, update, delete: if hasTab('products');
-      /* অর্ডার প্লেসে গ্রাহক শুধু স্টক কমাবে (app.js → decrementStock) */
       allow update: if publicStockDecrement();
     }
 
-    /* Settings: সবাই পড়ে।
-       - settings-tab: সব লেখা
-       - categories-tab: শুধু hiddenCategories/catImgs (+updatedAt) বদলাতে পারে */
     match /settings/{id} {
       allow read: if true;
       allow create: if hasTab('settings');
@@ -87,47 +142,66 @@ service cloud.firestore {
       allow delete: if hasTab('settings');
     }
 
-    /* Orders: যে কেউ তৈরি করতে পারে (guest checkout);
-       দেখে orders-tab বা লগইন করা অর্ডারের মালিক;
-       update: orderFull সব, নইলে শুধু stage/updatedAt */
+    /* Orders:
+       - create: guest checkout, ফরম্যাট যাচাই সহ (staff-এর জন্য ছাড়)
+       - get: orders-tab বা লগইন করা মালিক
+       - update: orderFull সব; staff শুধু stage/paid/updatedAt;
+                 লগইন করা গ্রাহক শুধু নিজের pending/confirmed অর্ডারে cancel request */
     match /orders/{id} {
-      allow create: if true;
+      allow create: if hasTab('orders') || validOrderCreate();
       allow get: if hasTab('orders') || (request.auth != null && resource.data.uid == request.auth.uid);
       allow list: if hasTab('orders');
       allow update: if orderFull() || (hasTab('orders') && onlyKeys(['stage', 'paid', 'updatedAt']));
+      allow update: if request.auth != null
+        && resource.data.uid == request.auth.uid
+        && resource.data.stage in ['pending', 'confirmed']
+        && onlyKeys(['cancelRequested', 'cancelRequestedAt', 'updatedAt'])
+        && request.resource.data.cancelRequested == true;
       allow delete: if false;
     }
 
     /* Public order-status mirror: guest tracking।
-       update: order update করতে পারে এমন staff */
+       ⚠ list খোলা রাখা হয়েছে (মোবাইল নম্বর দিয়ে খোঁজার ফিচারের জন্য) —
+         ঝুঁকি ও বিকল্প: README-FIXES দেখুন */
     match /orderStatus/{id} {
       allow read: if true;
-      allow create: if true;
-      allow update: if orderFull() || (hasTab('orders') && onlyKeys(['orderId', 'stage', 'paid', 'updatedAt']));
+      allow create: if orderFull() || hasTab('orders') || validStatusCreate(id);
+      allow update: if orderFull() || (hasTab('orders') && onlyKeys(['orderId', 'stage', 'status', 'paid', 'updatedAt']));
       allow delete: if false;
     }
 
-    /* Newsletter (WhatsApp numbers): যে কেউ দিতে পারে, দেখে newsletter-tab */
     match /newsletterNumbers/{id} {
-      allow create: if true;
+      allow create: if request.resource.data.keys().hasOnly(['number', 'createdAt'])
+                    && request.resource.data.number is string
+                    && request.resource.data.number.size() <= 40;
       allow read: if hasTab('newsletter');
       allow update, delete: if false;
     }
 
-    /* Reviews: সবাই পড়তে/লিখতে পারে, ডিলিট reviews-tab (spam নিয়ন্ত্রণ) */
     match /reviews/{id} {
-      allow read, create: if true;
+      allow read: if true;
+      allow create: if hasTab('reviews') || validReviewCreate();
       allow update: if false;
       allow delete: if hasTab('reviews');
     }
 
-    /* Combos: সবাই পড়তে পারে (visible filter client-side), লেখে combos-tab */
     match /combos/{id} {
       allow read: if true;
       allow create, update, delete: if hasTab('combos');
     }
 
-    /* Customer profiles: নিজেরটা নিজে */
+    /* Coupons (আগে এই রুল ছিল না — তাই কুপন কাজ করত না)
+       - get: যে কেউ কোড জানলে চেক করতে পারে (list বন্ধ — কোড অনুমান করে তালিকা বের করা যাবে না)
+       - update: গ্রাহক শুধু usedCount +১ ও usedBy/updatedAt
+       - বাকি সব: coupons বা settings tab */
+    match /coupons/{code} {
+      allow get: if true;
+      allow list, create, delete: if hasTab('coupons') || hasTab('settings');
+      allow update: if hasTab('coupons') || hasTab('settings');
+      allow update: if onlyKeys(['usedCount', 'usedBy', 'updatedAt'])
+        && request.resource.data.usedCount == resource.data.get('usedCount', 0) + 1;
+    }
+
     match /users/{uid} {
       allow read, write: if isOwnerUid(uid);
     }
