@@ -236,9 +236,9 @@
 
   function downloadTemplate() {
     var head = HEADERS.join(',');
-    var ex1 = ['প্রিমিয়াম কটন পাঞ্জাবি', 'Premium Cotton Panjabi', '', 1890, 2690, 'men', 'panjabi', 24,
-      '১০০% সুতি আরামদায়ক পাঞ্জাবি।', 'Comfortable 100% cotton panjabi.',
-      'https://example.com/panjabi1.jpg', '', 'M|L|XL|XXL', 'best-seller', 'true'].join(',');
+    var ex1 = ['কটন কুর্তি', 'Cotton Kurti', '', 1250, 1650, 'women', 'kurti', 24,
+      'নরম কটন কুর্তি, প্রতিদিনের জন্য আরামদায়ক।', 'Soft cotton kurti, comfortable for everyday wear.',
+      'https://example.com/kurti1.jpg', '', 'S|M|L|XL', 'best-seller', 'true'].join(',');
     var ex2 = ['জামদানি শাড়ি', 'Jamdani Saree', 'A100900', 3490, '', 'women', 'saree', 10,
       'ঐতিহ্যবাহী হাতে বোনা জামদানি।', 'Traditional hand-woven Jamdani.',
       'https://example.com/saree1.jpg', '', 'Free Size', 'featured', 'true'].join(',');

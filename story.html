@@ -131,6 +131,7 @@
 </style>
 </head>
 <body>
+<script>try{sessionStorage.setItem('xvStorySeen','1');}catch(e){}</script>
 
 <header class="topbar">
   <a class="brand" href="index.html">XAVELLE<span>.</span></a>
@@ -141,13 +142,13 @@
 <section class="film-wrap" id="filmWrap">
   <div class="stage" id="stage">
     <div class="progress" id="progress"></div>
-    <video id="filmSrc" class="bg" src="story-film.mp4?v=20261119b" autoplay loop muted playsinline preload="auto"></video>
+    <video id="filmSrc" class="bg" src="story-film.mp4?v=20261120a" autoplay loop muted playsinline preload="auto"></video>
     <canvas id="film"></canvas>
     <div class="loader" id="loader">গল্প লোড হচ্ছে…</div>
 
     <div class="caption" data-from="0.03" data-to="0.24">
       <div class="kicker">Chapter One</div>
-      <h2 id="cap1t">নকশা থেকে কাটিং</h2>
+      <h2 id="cap1t">হাতে বোনা ঐতিহ্য</h2>
       <p id="cap1s">প্রতিটা থ্রি-পিস শুরু হয় নিখুঁত মাপ আর যত্নের কাটিং দিয়ে</p>
     </div>
 
@@ -201,13 +202,9 @@
 /* ===== Story settings (Firestore) — অ্যাডমিন প্যানেল থেকে নিয়ন্ত্রিত ===== */
 window.__storyGate = (function(){
   var REST = 'https://firestore.googleapis.com/v1/projects/gen-lang-client-0710305331/databases/(default)/documents';
-  var IMG_FIX = {
-    p20: 'https://commons.wikimedia.org/wiki/Special:FilePath/Shivani%20rajput%20in%20salwar.jpg?width=800',
-    p11: 'https://commons.wikimedia.org/wiki/Special:FilePath/Perfume%20bottles%20displayed%20at%20a%20shop%20near%20Charminar%20in%20Hyderabad%2C%20India.jpg?width=800'
-  };
   var FALLBACK_PRODUCTS = {
     p19: { nameBn: 'জামদানি শাড়ি', nameEn: 'Jamdani Saree', price: 3490, img: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop' },
-    p20: { nameBn: 'কটন কুর্তি', nameEn: 'Cotton Kurti', price: 1250, img: IMG_FIX.p20 },
+    p20: { nameBn: 'কটন কুর্তি', nameEn: 'Cotton Kurti', price: 1250, img: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?q=80&w=800&auto=format&fit=crop' },
     p21: { nameBn: 'প্রিমিয়াম থ্রি-পিস', nameEn: 'Premium Three-Piece', price: 2190, img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop' },
     p22: { nameBn: 'প্রিমিয়াম হিজাব', nameEn: 'Premium Hijab', price: 550, img: 'https://images.unsplash.com/photo-1693985007521-e08e64770947?q=80&w=800&auto=format&fit=crop' }
   };
@@ -248,12 +245,12 @@ window.__storyGate = (function(){
     if (grid){
       grid.innerHTML = (story.productIds || []).map(function(id){
         var p = products[id]; if (!p) return '';
-        var img = IMG_FIX[id] || p.img || '';
+        var img = p.img || ''; /* অ্যাডমিনে বসানো ছবিই দেখাবে — কোনো override নয় */
         return '<article class="card"><img src="' + esc(img) + '" alt="' + esc(p.nameBn || p.nameEn || '') + '" loading="lazy">'
           + '<div class="body"><h4>' + esc(p.nameBn || p.nameEn || '') + '</h4>'
           + '<div class="en">' + esc(p.nameEn || '') + '</div>'
           + '<div class="price">৳' + bnNum(p.price != null ? p.price : '') + '</div>'
-          + '<a class="btn" href="index.html">দোকানে দেখুন</a></div></article>';
+          + '<a class="btn" href="index.html#product/' + esc(id) + '">দোকানে দেখুন</a></div></article>';
       }).join('');
     }
     if (settings){
@@ -271,7 +268,7 @@ window.__storyGate = (function(){
   function load(){
     return Promise.all([
       fetch(REST + '/settings/main').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }),
-      fetch(REST + '/products?pageSize=50').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; })
+      fetch(REST + '/products?pageSize=200').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; })
     ]).then(function(res){
       var settings = res[0] ? fields(res[0]) : null;
       var story = {};

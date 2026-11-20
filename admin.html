@@ -82,8 +82,8 @@
       </div>
       <div id="seedImportBox" class="setup-note" hidden>
         <b>Firestore-এ কোনো প্রোডাক্ট নেই</b>
-        <p>সাইটের ৫৫টি seed প্রোডাক্ট Firestore-এ আপলোড করুন — নইলে ওয়েবসাইটে প্রোডাক্ট দেখাবে না।</p>
-        <button class="btn" id="seedImportBtn">৫৫টি প্রোডাক্ট আপলোড করুন</button>
+        <p>সাইটের ৫টি seed প্রোডাক্ট Firestore-এ আপলোড করুন।</p>
+        <button class="btn" id="seedImportBtn">৫টি প্রোডাক্ট আপলোড করুন</button>
       </div>
       <div class="table-wrap"><table class="a-table" id="prodTable">
         <thead><tr><th>ছবি</th><th>নাম / SKU</th><th>দাম</th><th>স্টক</th><th>দৃশ্যমান</th><th>⚡/★</th><th></th></tr></thead>
@@ -101,7 +101,6 @@
           <label>দাম (৳) *<input id="pfPrice" type="number" min="0" required></label>
           <label>আগের দাম (৳)<input id="pfOldPrice" type="number" min="0" placeholder="ছাড় না থাকলে খালি"></label>
           <label>% ছাড়<input id="pfPct" type="number" min="0" max="90" placeholder="যেমন 50"></label>
-          <label>স্টক *<input id="pfStock" type="number" min="0" required></label>
           <div><label style="display:block;margin-bottom:6px">ট্যাগ <span class="muted small">(একাধিক টিক দেওয়া যাবে)</span></label>
             <div id="pfTags" style="display:flex;gap:10px;flex-wrap:wrap">
               <label style="display:flex;align-items:center;gap:4px;font-weight:400"><input type="checkbox" value="flash-sale" style="width:16px;height:16px"> ⚡ ফ্ল্যাশ সেল</label>
@@ -160,7 +159,10 @@
           <option value="">সব স্ট্যাটাস</option>
           <option value="pending">পেন্ডিং</option>
           <option value="confirmed">কনফার্মড</option>
+          <option value="packed">প্যাকড</option>
           <option value="shipped">শিপড</option>
+          <option value="in-transit">ট্রানজিটে</option>
+          <option value="out-for-delivery">ডেলিভারির পথে</option>
           <option value="delivered">ডেলিভার্ড</option>
           <option value="cancelled">বাতিল</option>
         </select>
@@ -305,6 +307,8 @@
           <label class="check"><input type="checkbox" data-ptab="categories"> ক্যাটাগরি</label>
           <label class="check"><input type="checkbox" data-ptab="orders"> অর্ডার</label>
           <label class="check"><input type="checkbox" data-ptab="reviews"> রিভিউ</label>
+          <label class="check"><input type="checkbox" data-ptab="combos"> কম্বো</label>
+          <label class="check"><input type="checkbox" data-ptab="coupons"> কুপন</label>
           <label class="check"><input type="checkbox" data-ptab="newsletter"> নিউজলেটার</label>
           <label class="check"><input type="checkbox" data-ptab="import"> ইমপোর্ট</label>
           <label class="check"><input type="checkbox" data-ptab="settings"> সেটিংস</label>
@@ -397,9 +401,9 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<script src="data.js?v=20261115c"></script>
+<script src="data.js?v=20261120a"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="admin-import.js?v=20261015"></script>
-<script type="module" src="admin.js?v=20261115c"></script>
+<script src="admin-import.js?v=20261120a"></script>
+<script type="module" src="admin.js?v=20261120a"></script>
 </body>
 </html>

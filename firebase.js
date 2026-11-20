@@ -178,11 +178,15 @@ export async function resetPassword(email) {
 
 /* cb(user|null) — ডেমো মোডে সঙ্গে সঙ্গে cb(null) */
 export function onAuthState(cb) {
+  let unsub = null;
+  let cancelled = false;
   fb().then((f) => {
-    if (f) f.aFns.onAuthStateChanged(f.auth, cb);
-    else cb(null);
+    if (!f) { if (!cancelled) cb(null); return; }
+    const u = f.aFns.onAuthStateChanged(f.auth, cb);
+    if (cancelled) u();
+    else unsub = u;
   });
-  return () => {};
+  return () => { cancelled = true; if (unsub) unsub(); };
 }
 
 export function currentUser() {
@@ -199,7 +203,7 @@ export async function fetchProducts() {
     const snap = await f.fFns.getDocs(f.fFns.collection(f.db, C.products));
     const list = [];
     snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-    return list.length ? list : null;
+    return list; /* খালি collection হলে [] — null শুধু error/demo-তে (seed fallback) */
   } catch (e) { console.warn('[XAVELLE] fetchProducts fallback:', e); return null; }
 }
 
@@ -307,12 +311,17 @@ export async function decrementStock(items) {
   if (!f) return false;
   try {
     await f.fFns.runTransaction(f.db, async (tx) => {
+      /* Firestore transaction-এ write-এর পর read করা যায় না —
+         তাই আগে সব read, তারপর সব write (multi-item অর্ডারের জন্য জরুরি) */
+      const jobs = [];
       for (const it of items || []) {
         if (!it || it.combo || it.comboId) continue;
         const ref = f.fFns.doc(f.db, C.products, it.id);
         const snap = await tx.get(ref);
         if (!snap.exists()) continue;
-        const p = snap.data();
+        jobs.push({ ref, p: snap.data(), it });
+      }
+      for (const { ref, p, it } of jobs) {
         const q = Math.max(1, Number(it.qty) || 1);
         if (it.size && p.sizeStock && typeof p.sizeStock === 'object' && p.sizeStock[it.size] !== undefined) {
           const cur = Number(p.sizeStock[it.size]) || 0;
@@ -481,12 +490,16 @@ export async function confirmOrderCancel(docId) {
       if ((o.stage || 'pending') === 'cancelled') return { ok: true, already: true, orderId: o.orderId };
       let restored = false;
       if (!o.stockRestored) {
+        /* আগে সব read, তারপর সব write — transaction-এ write-এর পর read নিষেধ */
+        const jobs = [];
         for (const it of o.items || []) {
           if (!it || it.combo || it.comboId) continue;
           const ref = f.fFns.doc(f.db, C.products, it.id);
           const psnap = await tx.get(ref);
           if (!psnap.exists()) continue;
-          const p = psnap.data();
+          jobs.push({ ref, p: psnap.data(), it });
+        }
+        for (const { ref, p, it } of jobs) {
           const q = Math.max(1, Number(it.qty) || 1);
           if (it.size && p.sizeStock && typeof p.sizeStock === 'object' && p.sizeStock[it.size] !== undefined) {
             const cur = Number(p.sizeStock[it.size]) || 0;

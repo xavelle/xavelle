@@ -15,7 +15,7 @@ import {
   fetchMyRole, fetchStaffList, saveStaff, removeStaff,
   createStaffAccount, uploadProductImage, deleteProductImage,
   sizeQty, totalStock, tabsForRole, orderFullForRole, OWNER_UID,
-} from './firebase.js?v=20261016e';
+} from './firebase.js?v=20261120a';
 
 /* data.js (classic script) globals: MAIN_CATEGORIES, SEED_PRODUCTS, DEFAULT_SETTINGS */
 /* admin-import.js (classic script) global: window.AuraImport */
@@ -75,7 +75,7 @@ function can(perm) {
   return myTabs.includes(perm);
 }
 
-const STAGE_BN = { pending: 'পেন্ডিং', confirmed: 'কনফার্মড', shipped: 'শিপড', delivered: 'ডেলিভার্ড', cancelled: 'বাতিল' };
+const STAGE_BN = { pending: 'পেন্ডিং', confirmed: 'কনফার্মড', packed: 'প্যাকড', shipped: 'শিপড', 'in-transit': 'ট্রানজিটে', 'out-for-delivery': 'ডেলিভারির পথে', delivered: 'ডেলিভার্ড', cancelled: 'বাতিল' };
 const PAY_BN = { cod: 'ক্যাশ অন ডেলিভারি', bkash: 'বিকাশ', nagad: 'নগদ', card: 'কার্ড' };
 
 /* ================= AUTH ================= */
@@ -148,7 +148,9 @@ async function loadAll() {
   /* Role অনুযায়ী শুধু দরকারি data লোড (reviews/newsletter tab-এ ক্লিকে লোড হয়) */
   await loadProducts();
   if (can('orders')) await loadOrders();
-  if (myRole === 'owner') { await loadSettings(); }
+  /* settings শুধু owner-এর জন্য লোড হলে categories-tab-ওয়ালা staff settings=null পেত —
+     categories সেভে hiddenCategories/catImgs মুছে যাওয়ার ঝুঁকি ছিল */
+  if (myRole === 'owner' || can('categories') || can('settings')) { await loadSettings(); }
 }
 
 /* ================= DASHBOARD ================= */
@@ -522,7 +524,7 @@ function initProducts() {
   $('#imgFile').addEventListener('change', handleImgFiles);
   $('#pfMain').addEventListener('change', () => { $('#pfSub').innerHTML = subOptions($('#pfMain').value, ''); });
   $('#seedImportBtn').addEventListener('click', async () => {
-    if (!confirm('৫৫টি seed প্রোডাক্ট Firestore-এ আপলোড করবেন?')) return;
+    if (!confirm('৫টি seed প্রোডাক্ট Firestore-এ আপলোড করবেন?')) return;
     const btn = $('#seedImportBtn');
     btn.disabled = true;
     btn.textContent = 'আপলোড হচ্ছে...';
@@ -532,7 +534,7 @@ function initProducts() {
       if (r.ok) ok++;
     }
     btn.disabled = false;
-    btn.textContent = '৫৫টি প্রোডাক্ট আপলোড করুন';
+    btn.textContent = '৫টি প্রোডাক্ট আপলোড করুন';
     toast(ok + 'টি আপলোড হয়েছে।');
     await loadProducts();
   });
@@ -579,6 +581,7 @@ async function bindCatImgUpload() {
   };
 }
 async function saveCategories() {
+  if (!settings) { toast('সেটিংস লোড হয়নি — পেজ রিফ্রেশ করে আবার চেষ্টা করুন।'); return; }
   const hidden = $$('#catList input[data-cat]').filter((i) => !i.checked).map((i) => i.dataset.cat);
   const r = await saveSettings({ ...(settings || {}), hiddenCategories: hidden, catImgs: (settings && settings.catImgs) || {} });
   if (r.ok) { settings = { ...(settings || {}), hiddenCategories: hidden, catImgs: (settings && settings.catImgs) || {} }; toast('সেভ হয়েছে।'); }
@@ -647,7 +650,7 @@ function bindOrderCards(root) {
       if (o) {
         o.stage = sel.value;
         /* public mirror আপডেট — guest tracking-এ নতুন status দেখাবে */
-        if (o.orderId) updateOrderStatusByOrderId(o.orderId, sel.value);
+        if (o.orderId) updateOrderStatusByOrderId(o.orderId, sel.value).catch(() => {});
       }
       sel.className = 'status-select st-' + sel.value;
       toast('স্ট্যাটাস আপডেট হয়েছে।');
@@ -661,7 +664,7 @@ function bindOrderCards(root) {
       if (o) {
         o.paid = cb.checked;
         /* public mirror আপডেট — tracking-এ payment status দেখাবে */
-        if (o.orderId || cb.dataset.orderid) setOrderPaidByOrderId(o.orderId || cb.dataset.orderid, cb.checked);
+        if (o.orderId || cb.dataset.orderid) setOrderPaidByOrderId(o.orderId || cb.dataset.orderid, cb.checked).catch(() => {});
       }
       toast(cb.checked ? 'পেমেন্ট ভেরিফাইড ✓' : 'পেমেন্ট পেন্ডিং করা হয়েছে।');
     } else { cb.checked = !cb.checked; toast('আপডেট ব্যর্থ: ' + (r.error || '')); }
@@ -763,6 +766,7 @@ async function loadCombos() {
       <button class="btn btn-outline btn-sm" data-cbdel="${esc(c.id)}">ডিলিট</button></div>
       <div class="order-meta"><small>${esc(names)}</small></div></div>`;
   }).join('') || '<p class="muted">কোনো কম্বো নেই।</p>';
+  renderComboProdList(); /* picker-ও এখনকার প্রোডাক্ট দিয়ে রেন্ডার — আগে খালি থাকত */
   $$('#comboList [data-cbdel]').forEach((b) => b.onclick = async () => {
     if (!confirm('কম্বোটি ডিলিট করবেন?')) return;
     const d = await deleteCombo(b.dataset.cbdel);

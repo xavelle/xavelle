@@ -1,8 +1,8 @@
 /* XAVELLE — Phase 1: customer website (no admin panel).
    Hash router SPA. Cart + wishlist in localStorage. Orders → Firestore
    (or localStorage demo mode). All renders escape user-entered text. */
-import { isConfigured, fetchProducts, fetchSettings, saveOrder, fetchOrder, fetchReviews, submitReview, fetchCombos, sizeQty, totalStock, isOutOfStock, subscribeProducts, decrementStock } from './firebase.js?v=20261118b';
-import * as fb from './firebase.js?v=20261118b'; /* namespace: optional auth fns (signIn/signUp/resetPassword/fetchUserOrders) may not exist yet */
+import { isConfigured, fetchProducts, fetchSettings, saveOrder, fetchOrder, fetchReviews, submitReview, fetchCombos, sizeQty, totalStock, isOutOfStock, subscribeProducts, decrementStock } from './firebase.js?v=20261120a';
+import * as fb from './firebase.js?v=20261120a'; /* namespace: optional auth fns (signIn/signUp/resetPassword/fetchUserOrders) may not exist yet */
 
 /* ---------------- state ---------------- */
 const $ = (s, el = document) => el.querySelector(s);
@@ -124,6 +124,7 @@ const I18N = {
   subscribe: { bn: 'সাবস্ক্রাইব', en: 'Subscribe' },
   nlOk: { bn: 'সাবস্ক্রাইব হয়েছে — ধন্যবাদ!', en: 'Subscribed — thank you!' },
   nlBad: { bn: 'সঠিক ইমেইল বা মোবাইল নম্বর দিন', en: 'Enter a valid email or mobile number' },
+  nlFail: { bn: 'সাবস্ক্রাইব করা যায়নি — আবার চেষ্টা করুন', en: 'Could not subscribe — please try again' },
   home: { bn: 'হোম', en: 'Home' },
   shop: { bn: 'সব প্রোডাক্ট', en: 'Shop All' },
   categories: { bn: 'টপ ক্যাটাগরি', en: 'Top Categories' },
@@ -327,6 +328,7 @@ const I18N = {
   ctMsg: { bn: 'মেসেজ *', en: 'Message *' },
   ctSend: { bn: 'মেসেজ পাঠান', en: 'Send Message' },
   ctOk: { bn: 'মেসেজ পাঠানো হয়েছে — আমরা যোগাযোগ করবো।', en: 'Message sent — we will get back to you.' },
+  ctWa: { bn: 'WhatsApp খুলছে — সেখানে Send চাপলেই মেসেজ আমাদের কাছে পৌঁছাবে।', en: 'Opening WhatsApp — press Send there and your message will reach us.' },
   /* delivery page */
   dlT: { bn: 'ডেলিভারি তথ্য', en: 'Delivery Info' },
   dlTimeH: { bn: 'ডেলিভারি সময়', en: 'Delivery time' },
@@ -717,7 +719,7 @@ function viewHome() {
     return `<a class="main-cat-card" href="#shop?main=${m.slug}"><span class="mc-img"><img src="${esc(cimg)}" alt="${esc(LANG === 'bn' ? m.bn : m.en)}" onerror="this.src='${FALLBACK_IMG}'" loading="lazy"></span><span class="mc-name">${esc(LANG === 'bn' ? m.bn : m.en)}</span><span class="mc-subs">${esc(subNames)}</span></a>`;
   }).join('')}</div></section>
 
-  ${flash.length ? `<section class="section"><div class="flash-box"><div class="flash-head"><h2>${t('flash')}</h2><div class="countdown" id="countdown"></div></div><div class="prod-row" style="margin-top:14px">${flash.map(prodCard).join('')}</div></div></section>` : ''}
+  ${flash.length ? `<section class="section"><div class="flash-box"><div class="flash-head"><h2>${t('flash')}</h2></div><div class="prod-row" style="margin-top:14px">${flash.map(prodCard).join('')}</div></div></section>` : ''}
   ${offers.length ? `<section class="section"><div class="section-head"><h2>${t('offersTitle')}</h2><a href="#offers">${t('viewAll')} →</a></div><div class="prod-row">${offers.map(prodCard).join('')}</div></section>` : ''}
   ${news.length ? `<section class="section"><div class="section-head"><h2>${t('newArr')}</h2><a href="#shop">${t('viewAll')} →</a></div><div class="prod-row">${news.map(prodCard).join('')}</div></section>` : ''}
   <div id="homeCombos"></div>
@@ -801,7 +803,7 @@ function addComboToCart(id) {
   });
   persistCart();
   updateBadges();
-  toast(t('addedCart'));
+  toast(t('addedToast'));
 }
 
 function viewShop(params) {
@@ -811,7 +813,7 @@ function viewShop(params) {
   const sort = params.get('sort') || 'popular';
   const maxPrice = parseInt(params.get('max') || '0', 10);
   const sizeF = params.get('size') || '';
-  let list = PRODUCTS.filter((p) => p.stock >= 0 && p.visible !== false && catVisible(p));
+  let list = PRODUCTS.filter((p) => (p.stock == null || p.stock >= 0) && p.visible !== false && catVisible(p));
   if (main) list = list.filter((p) => p.main === main);
   if (sub) list = list.filter((p) => p.sub === sub);
   if (q) {
@@ -876,7 +878,7 @@ function viewProduct(id) {
       <span style="color:var(--muted); font-size:13px">${esc(prodMainLabel(p))}</span>
       <h1>${esc(name)}</h1>
       ${p.sku ? `<div class="sku-line">SKU: <b>${esc(p.sku)}</b></div>` : ''}
-      ${(() => { const rv = seedReviews[p.id] || []; if (!rv.length) return `<div style="color:var(--muted); font-size:13px">${t('rateNone')}</div>`; const avg = rv.reduce((s, r) => s + (r.rating || 0), 0) / rv.length; return `<div class="stars">${stars(avg)} <span style="color:var(--muted); font-size:13px">(${avg.toFixed(1)}) · ${t('revCount', { n: rv.length })}</span></div>`; })()}
+      <div id="pdRating">${(() => { const rv = seedReviews[p.id] || []; if (!rv.length) return `<div style="color:var(--muted); font-size:13px">${t('rateNone')}</div>`; const avg = rv.reduce((s, r) => s + (r.rating || 0), 0) / rv.length; return `<div class="stars">${stars(avg)} <span style="color:var(--muted); font-size:13px">(${avg.toFixed(1)}) · ${t('revCount', { n: rv.length })}</span></div>`; })()}</div>
       <div class="pd-price"><b>${fmt(p.price)}</b>${off > 0 ? `<s>${fmt(p.oldPrice)}</s>` : ''}${off > 0 ? ` <span style="color:var(--red); font-weight:700">${t('offPct', { n: off })}</span>` : ''}</div>
       <p class="desc">${esc(desc)}</p>
       ${(() => { const f = p.fabric || {}; const parts = [];
@@ -1185,7 +1187,7 @@ function viewCheckout() {
     </div>
   </div><div class="card">
     <h3>${t('coItems')}</h3>
-    ${cart.map((i) => { const p = prodById(i.id); if (!p) return ''; return `<div class="tot-row"><span>${esc(LANG === 'bn' ? p.nameBn : p.nameEn)} × ${i.qty}</span><b>${fmt(p.price * i.qty)}</b></div>`; }).join('')}
+    ${cart.map((i) => { if (i.combo) return `<div class="tot-row"><span>${esc(LANG === 'bn' ? (i.combo.nameBn || i.combo.nameEn || '') : (i.combo.nameEn || i.combo.nameBn || ''))} × ${i.qty}</span><b>${fmt((i.combo.price || 0) * i.qty)}</b></div>`; const p = prodById(i.id); if (!p) return ''; return `<div class="tot-row"><span>${esc(LANG === 'bn' ? p.nameBn : p.nameEn)} × ${i.qty}</span><b>${fmt(p.price * i.qty)}</b></div>`; }).join('')}
     <div class="tot-row"><span>${t('subtotal')}</span><b>${fmt(sub)}</b></div>
     <div class="coupon-box">
       <input id="cpnCode" placeholder="${t('cpnPh')}" style="text-transform:uppercase" autocomplete="off">
@@ -1249,7 +1251,17 @@ async function placeOrder(e) {
     const net = sub - disc;
     const del = cart.some((i) => i.combo && i.combo.freeDel) ? 0 : deliveryCharge(district, net);
     const total = net + del;
-    const orderId = 'AL-' + Math.floor(100000 + Math.random() * 900000);
+    let orderId = 'AL-' + Math.floor(100000 + Math.random() * 900000);
+    /* Order ID collision এড়ানো: tracking mirror-এ একই ID থাকলে নতুন ID নাও
+       (নইলে অন্য কাস্টমারের tracking record overwrite হয়ে যেত) */
+    if (isConfigured() && fb && typeof fb.fetchOrderStatus === 'function') {
+      for (let tries = 0; tries < 6; tries++) {
+        let exists = null;
+        try { exists = await fb.fetchOrderStatus(orderId); } catch { exists = null; }
+        if (!exists) break;
+        orderId = 'AL-' + Math.floor(100000 + Math.random() * 900000);
+      }
+    }
     const sessUser = loadLS('aura_user', null);
     const order = {
       orderId, name, phone, district, address, email, whats, note, pay,
@@ -1263,6 +1275,13 @@ async function placeOrder(e) {
       createdAt: new Date().toISOString(),
     };
     const remoteId = await saveOrder(order);
+    if (!remoteId && isConfigured()) {
+      /* লাইভ মোডে সার্ভারে সেভ না হলে success দেখানো যাবে না — নইলে অর্ডার
+         শুধু এই ব্রাউজারেই থেকে যেত, অ্যাডমিন কখনো পেত না (silent lost order) */
+      err.textContent = t('orderFail');
+      btn.disabled = false; btn.innerHTML = btnLabel;
+      return;
+    }
     if (!remoteId) { localOrders.push(order); saveLS('aura_orders_local', localOrders); }
     else {
       try { await decrementStock(order.items); } catch (e) { console.warn('[XAVELLE] stock decrement skipped:', e); }
@@ -1439,6 +1458,11 @@ async function loadReviews(productId) {
   const remote = await fetchReviews(productId);
   const all = [...(seedReviews[productId] || []), ...remote.map((r) => ({ name: r.name, rating: r.rating, text: r.text, date: r.createdAt ? new Date(r.createdAt.seconds * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '', verified: !!r.verified }))];
   const avg = all.length ? (all.reduce((s, r) => s + r.rating, 0) / all.length) : 0;
+  /* পেজের উপরের rating-ও আসল (seed + remote) রিভিউ দিয়ে আপডেট — আগে শুধু seed ধরা হতো */
+  const pdR = document.getElementById('pdRating');
+  if (pdR) pdR.innerHTML = all.length
+    ? `<div class="stars">${stars(avg)} <span style="color:var(--muted); font-size:13px">(${avg.toFixed(1)}) · ${t('revCount', { n: all.length })}</span></div>`
+    : `<div style="color:var(--muted); font-size:13px">${t('rateNone')}</div>`;
   const counts = [5, 4, 3, 2, 1].map((n) => all.filter((r) => r.rating === n).length);
   box.innerHTML = `<div class="review-box"><h3>${t('testi')}</h3>
     ${all.length ? `<p><b>${avg.toFixed(1)} / 5</b> <span class="stars">${stars(avg)}</span> • ${t('revCount', { n: all.length })}</p>
@@ -1551,12 +1575,35 @@ bindDynamic = function () {
     let ok = false;
     if (isConfigured() && typeof fb.saveNewsletterNumber === 'function') {
       try { ok = await fb.saveNewsletterNumber(val); } catch { ok = false; }
+      if (!ok) { toast(t('nlFail')); return; } /* সেভ না হলে success বলা যাবে না */
     }
     toast(t('nlOk')); nl.reset();
   });
-  /* contact form */
+  /* contact form — মেসেজ সরাসরি দোকানের WhatsApp-এ যায় (আগে শুধু toast দেখিয়ে হারিয়ে যেত) */
   const cf = $('#contactForm');
-  if (cf) cf.addEventListener('submit', (e) => { e.preventDefault(); toast(t('ctOk')); cf.reset(); });
+  if (cf) cf.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const ins = cf.querySelectorAll('input, textarea');
+    const cName = (ins[0] && ins[0].value.trim()) || '';
+    const cPhone = (ins[1] && ins[1].value.trim()) || '';
+    const cMsg = (ins[2] && ins[2].value.trim()) || '';
+    const w = (SETTINGS.whatsapp || '').replace(/[\s+]/g, '');
+    if (w) {
+      const text = encodeURIComponent(`আসসালামু আলাইকুম! আমি ${cName} (${cPhone})।\n${cMsg}`);
+      window.open('https://wa.me/' + w + '?text=' + text, '_blank');
+      toast(t('ctWa'));
+    } else {
+      toast(t('ctOk'));
+    }
+    cf.reset();
+  });
+  /* checkout: ফিল্ড ঠিক করতে শুরু করলেই পুরনো error মুছে যাক */
+  const coFormEl = $('#coForm');
+  if (coFormEl) {
+    const clearCoErr = () => { const ce = $('#coErr'); if (ce) ce.textContent = ''; };
+    coFormEl.addEventListener('input', clearCoErr);
+    coFormEl.addEventListener('change', clearCoErr);
+  }
   /* hero carousel */
   const hc = $('#heroCarousel');
   if (hc) {
@@ -1582,7 +1629,7 @@ bindDynamic = function () {
   if (fQ) fQ.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const u = new URLSearchParams(location.hash.split('?')[1] || ''); const v = fQ.value.trim(); if (v) u.set('q', v); else u.delete('q'); u.delete('page'); location.hash = '#shop?' + u.toString(); } });
   if (fQ) {
     try { if (sessionStorage.getItem('xvFQ')) { sessionStorage.removeItem('xvFQ'); fQ.focus(); const n = fQ.value.length; try { fQ.setSelectionRange(n, n); } catch {} } } catch {}
-    fQ.addEventListener('input', () => { clearTimeout(fQ._dt); fQ._dt = setTimeout(() => { const u = new URLSearchParams(location.hash.split('?')[1] || ''); const v = fQ.value.trim(); if (v) u.set('q', v); else u.delete('q'); u.delete('page'); const h = '#shop?' + u.toString(); if (location.hash !== h) { try { sessionStorage.setItem('xvFQ', '1'); } catch {} location.hash = h; } }, 450); });
+    fQ.addEventListener('input', () => { clearTimeout(fQ._dt); fQ._dt = setTimeout(() => { const u = new URLSearchParams(location.hash.split('?')[1] || ''); const v = fQ.value.trim(); if (v) u.set('q', v); else u.delete('q'); u.delete('page'); const h = '#shop?' + u.toString(); if (location.hash !== h) { try { sessionStorage.setItem('xvFQ', '1'); } catch {} location.hash = h; } }, 250); });
   }
   /* product detail */
   const pd = $('#sizeRow');
@@ -1927,7 +1974,12 @@ async function loadAccountOrders() {
   if (!orders.length) { box.innerHTML = `<p style="color:var(--muted)">${t('siNoOrders')}</p>`; return; }
   const canCancelServer = !!fbuid; /* Firebase-এ লগইন করা customer-ই cancel request করতে পারে */
   box.innerHTML = orders.map((o) => {
-    const dt = (o.createdAt || '').slice(0, 10);
+    /* createdAt Firestore Timestamp object হতে পারে — string ধরে .slice করলে crash হতো */
+    const rawDt = o.createdAt;
+    const dt = typeof rawDt === 'string' ? rawDt.slice(0, 10)
+      : (rawDt && typeof rawDt.toDate === 'function') ? rawDt.toDate().toISOString().slice(0, 10)
+      : (rawDt && typeof rawDt.seconds === 'number') ? new Date(rawDt.seconds * 1000).toISOString().slice(0, 10)
+      : '';
     const st = o.stage || 'pending';
     let action = '';
     if (st === 'cancelled') {
